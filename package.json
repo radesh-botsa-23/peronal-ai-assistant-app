@@ -14,7 +14,13 @@
     "search": "node workflow-email-agent.mjs",
     "setup": "wsl bash scripts/setup-workspace.sh"
   },
-  "keywords": ["ai", "assistant", "email", "discord", "productivity"],
+  "keywords": [
+    "ai",
+    "assistant",
+    "email",
+    "discord",
+    "productivity"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -22,6 +28,7 @@
     "@google/generative-ai": "^0.21.0",
     "discord.js": "^14.18.0",
     "dotenv": "^16.5.0",
-    "googleapis": "^173.0.0"
+    "googleapis": "^173.0.0",
+    "undici": "^8.5.0"
   }
 }
