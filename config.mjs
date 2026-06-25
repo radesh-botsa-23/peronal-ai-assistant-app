@@ -15,6 +15,9 @@ export const config = {
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "EAAOC0x9uJTQBR9mDZAYydUP26PSICgKZAvRfMASos5HQRJSnOFjtgIb0ZBljTNCZCZAtwQxpIcGac5pk9dwZBpQs02qyZCzSAri3H80qfLFz0uRrW9YpweDZA57ZCkItl0EWZAQEtPHpZBECKfxgBMZAnvD03tsjm16Wj87iKZCteQ6jYQsHtvbKs6NEDZC6dg0baMS8t4bRuBLmYHIN80i2ZCN6ZCKsHZC2uD38F0C5hXXTZBd4X0bMpdDpKKiAZDZD",
     verifyToken: process.env.WHATSAPP_VERIFY_TOKEN || "personal_ai_assistant_verify",
   },
+  fireflies: {
+    apiKey: process.env.FIREFLIES_API_KEY || "",
+  },
   ingestion: {
     intervalMinutes: parseInt(process.env.INGESTION_INTERVAL || "30", 10),
     maxEmails: 50,

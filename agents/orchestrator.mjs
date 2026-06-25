@@ -4,6 +4,7 @@ import { crossSourceSearch, prepareMeetingBrief as memoryMeetingBrief } from "./
 import { getDailyReport } from "./summary-agent.mjs";
 import { getTodaysMeetings, getUpcomingMeetings, prepareMeetingBrief } from "./calendar-agent.mjs";
 import { searchWhatsAppMessages, summarizeWhatsAppChat } from "./whatsapp-agent.mjs";
+import { getRecentMeetings, searchMeetings, prepareMeetingWithContext, getTodaysMeetingSummaries } from "./meetings-agent.mjs";
 
 /**
  * GStack Orchestrator - Routes requests to the appropriate specialized agent
@@ -38,7 +39,7 @@ export async function processCommand(message) {
         return await getDailyReport();
 
       case "meeting_prep":
-        return await prepareMeetingBrief(query);
+        return await prepareMeetingWithContext(query);
 
       case "todays_meetings":
         return await getTodaysMeetings();
@@ -47,7 +48,13 @@ export async function processCommand(message) {
         return await getUpcomingMeetings();
 
       case "search_teams":
-        return await crossSourceSearch(`teams meeting ${query}`);
+        return await searchMeetings(query);
+
+      case "meeting_summary":
+        return await getTodaysMeetingSummaries();
+
+      case "recent_meetings":
+        return await getRecentMeetings();
 
       case "search_whatsapp":
         return await searchWhatsAppMessages(query);
