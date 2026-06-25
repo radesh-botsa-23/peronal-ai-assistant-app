@@ -12,7 +12,8 @@ export const config = {
   whatsapp: {
     phoneId: process.env.WHATSAPP_PHONE_ID || "1149331888269055",
     whatsappId: process.env.WHATSAPP_BUSINESS_ID || "4373204106268491",
-    accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "EAAOC0x9uJTQBR9mDZAYydUP26PSICgKZAvRfMASos5HQRJSnOFjtgIb0ZBljTNCZCZAtwQxpIcGac5pk9dwZBpQs02qyZCzSAri3H80qfLFz0uRrW9YpweDZA57ZCkItl0EWZAQEtPHpZBECKfxgBMZAnvD03tsjm16Wj87iKZCteQ6jYQsHtvbKs6NEDZC6dg0baMS8t4bRuBLmYHIN80i2ZCN6ZCKsHZC2uD38F0C5hXXTZBd4X0bMpdDpKKiAZDZD",
+    // Token loaded from env only — never hardcoded
+    accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
     verifyToken: process.env.WHATSAPP_VERIFY_TOKEN || "personal_ai_assistant_verify",
   },
   fireflies: {

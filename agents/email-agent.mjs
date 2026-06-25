@@ -39,15 +39,15 @@ export async function searchEmails(query, sender = null) {
 }
 
 /**
- * Get today's emails for summarization.
+ * Get recent emails for summarization.
  * @returns {Promise<string>} Summarized emails
  */
 export async function summarizeTodaysEmails() {
-  const today = new Date().toISOString().split("T")[0];
-  const rawResults = queryGBrain(`emails from ${today}`);
+  // Search for recent emails — GBrain uses keyword search not date filter
+  const rawResults = queryGBrain("email subject from");
 
   if (!rawResults || rawResults.trim().length === 0) {
-    return `No emails found for ${today}.`;
+    return "No emails found in memory. Make sure the ingestion pipeline has run.";
   }
 
   try {

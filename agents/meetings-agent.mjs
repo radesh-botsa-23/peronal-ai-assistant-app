@@ -1,6 +1,16 @@
-import { getTranscripts, getTranscriptsByParticipant, getTranscriptsByDateRange, formatTranscript } from "../lib/fireflies-client.mjs";
 import { queryGBrain, storeDocument } from "../lib/gbrain-client.mjs";
 import { generateResponse } from "../lib/gemini-client.mjs";
+import { config } from "../config.mjs";
+
+// Lazy-load Fireflies client only when API key is available
+let firefliesClient = null;
+async function getFirefliesClient() {
+  if (!config.fireflies?.apiKey) return null;
+  if (!firefliesClient) {
+    firefliesClient = await import("../lib/fireflies-client.mjs");
+  }
+  return firefliesClient;
+}
 
 /**
  * Meetings Agent - Fetches meeting transcripts from Fireflies.ai,
@@ -77,30 +87,34 @@ export async function ingestMeetings(limit = 20) {
 
 /**
  * Get recent meeting summaries formatted for display.
+ * Falls back to GBrain if Fireflies API key is not set.
  * @param {number} limit
  * @returns {Promise<string>}
  */
 export async function getRecentMeetings(limit = 5) {
-  try {
-    const transcripts = await getTranscripts(limit);
-
-    if (transcripts.length === 0) {
-      return "No recent meetings found in Fireflies.";
+  const ff = await getFirefliesClient();
+  if (ff) {
+    try {
+      const transcripts = await ff.getTranscripts(limit);
+      if (transcripts.length === 0) {
+        return "No recent meetings found in Fireflies.";
+      }
+      let result = "## 📋 Recent Meetings\n\n";
+      for (const t of transcripts) {
+        result += ff.formatTranscript(t) + "\n---\n\n";
+      }
+      return result;
+    } catch (err) {
+      console.warn("Fireflies fetch failed, falling back to GBrain:", err.message);
     }
-
-    let result = "## 📋 Recent Meetings\n\n";
-    for (const t of transcripts) {
-      result += formatTranscript(t) + "\n---\n\n";
-    }
-    return result;
-  } catch (err) {
-    // Fallback to GBrain if Fireflies API fails
-    const gbrainResults = queryGBrain("meeting summary participants");
-    if (gbrainResults && gbrainResults.trim().length > 0) {
-      return `## 📋 Recent Meetings (from memory)\n\n${gbrainResults}`;
-    }
-    return `Failed to fetch meetings: ${err.message}`;
   }
+
+  // Fallback: search GBrain for stored meetings
+  const gbrainResults = queryGBrain("meeting summary participants");
+  if (gbrainResults && gbrainResults.trim().length > 0) {
+    return `## 📋 Stored Meeting Summaries\n\n${gbrainResults}`;
+  }
+  return "No meetings found. Upload a meeting recording or configure Fireflies API key.";
 }
 
 /**
@@ -170,30 +184,39 @@ If some sections have limited info, note that.`;
 }
 
 /**
- * Get meeting summary for today.
+ * Get meeting summaries for today.
+ * Falls back to GBrain if Fireflies API key not set.
  * @returns {Promise<string>}
  */
 export async function getTodaysMeetingSummaries() {
-  const today = new Date();
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
-
-  try {
-    const transcripts = await getTranscriptsByDateRange(
-      startOfDay.toISOString(),
-      endOfDay.toISOString()
-    );
-
-    if (transcripts.length === 0) {
-      return "No meetings recorded today in Fireflies.";
+  const ff = await getFirefliesClient();
+  if (ff) {
+    try {
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+      const transcripts = await ff.getTranscriptsByDateRange(
+        startOfDay.toISOString(),
+        endOfDay.toISOString()
+      );
+      if (transcripts.length === 0) {
+        return "No meetings recorded today in Fireflies.";
+      }
+      let result = "## Today's Meeting Summaries\n\n";
+      for (const t of transcripts) {
+        result += ff.formatTranscript(t) + "\n---\n\n";
+      }
+      return result;
+    } catch (err) {
+      console.warn("Fireflies today's meetings failed:", err.message);
     }
-
-    let result = "## Today's Meeting Summaries\n\n";
-    for (const t of transcripts) {
-      result += formatTranscript(t) + "\n---\n\n";
-    }
-    return result;
-  } catch (err) {
-    return `Failed to fetch today's meetings: ${err.message}`;
   }
+
+  // Fallback: search GBrain for today's meetings
+  const today = new Date().toISOString().split("T")[0];
+  const results = queryGBrain(`meeting ${today}`);
+  if (results && results.trim().length > 0) {
+    return `## Today's Meetings (from memory)\n\n${results}`;
+  }
+  return "No meeting recordings found for today.";
 }

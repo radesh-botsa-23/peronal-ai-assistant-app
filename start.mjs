@@ -1,45 +1,51 @@
 import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
+import { config } from "./config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/**
- * Main entry point - starts both the Discord bot and the ingestion pipeline.
- */
+console.log("🚀 Personal AI Assistant — Starting services...\n");
 
-console.log("🚀 Personal AI Assistant - Starting all services...\n");
+const processes = [];
 
-// Start Discord Bot
-const bot = spawn("node", [path.join(__dirname, "discord-bot.mjs")], {
-  stdio: "inherit",
-  env: { ...process.env },
-});
+function spawnProcess(name, file, env = {}) {
+  const proc = spawn("node", [path.join(__dirname, file)], {
+    stdio: "inherit",
+    env: { ...process.env, ...env },
+  });
+  proc.on("error", (err) => console.error(`[${name}] Error:`, err.message));
+  proc.on("exit", (code) => {
+    if (code !== 0) console.error(`[${name}] Exited with code ${code}`);
+  });
+  processes.push(proc);
+  console.log(`✅ Started: ${name}`);
+  return proc;
+}
 
-// Start Ingestion Pipeline
-const ingestion = spawn("node", [path.join(__dirname, "ingestion-pipeline.mjs")], {
-  stdio: "inherit",
-  env: { ...process.env },
-});
+// Always start the Discord bot
+spawnProcess("Discord Bot", "discord-bot.mjs");
 
-bot.on("error", (err) => {
-  console.error("Discord bot error:", err.message);
-});
+// Always start the ingestion pipeline
+spawnProcess("Email Ingestion", "ingestion-pipeline.mjs");
 
-ingestion.on("error", (err) => {
-  console.error("Ingestion pipeline error:", err.message);
-});
+// Start WhatsApp webhook only if access token is configured
+if (config.whatsapp.accessToken) {
+  spawnProcess("WhatsApp Webhook", "whatsapp-webhook.mjs");
+} else {
+  console.log("⏭️  WhatsApp webhook skipped (WHATSAPP_ACCESS_TOKEN not set)");
+}
 
-// Handle graceful shutdown
-process.on("SIGINT", () => {
-  console.log("\n🛑 Shutting down...");
-  bot.kill();
-  ingestion.kill();
+console.log("");
+
+// Graceful shutdown
+function shutdown() {
+  console.log("\n🛑 Shutting down all services...");
+  for (const proc of processes) {
+    proc.kill("SIGTERM");
+  }
   process.exit(0);
-});
+}
 
-process.on("SIGTERM", () => {
-  bot.kill();
-  ingestion.kill();
-  process.exit(0);
-});
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
