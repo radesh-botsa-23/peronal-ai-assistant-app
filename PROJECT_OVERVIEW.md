@@ -66,9 +66,8 @@ Meeting audio file (.mp3/.wav/.webm)
          → Available for meeting prep queries
 ```
 
-### Daily Report Flow  (Automated 8 AM)
-``
-hi
+### Daily Report Flow (Automated 8 AM)
+```
 Cron triggers → daily-report-cron.mjs
          → GBrain query (emails + tasks)
          → Google Calendar (today's events)
