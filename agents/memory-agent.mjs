@@ -11,24 +11,31 @@ import { generateResponse, generateMeetingBrief } from "../lib/gemini-client.mjs
  * @returns {Promise<string>}
  */
 export async function crossSourceSearch(query) {
-  const rawResults = queryGBrain(query);
-
-  if (!rawResults || rawResults.trim().length === 0) {
-    return "No relevant information found across any source. Try refining your query with more specific terms.";
+  let rawResults = "";
+  try {
+    rawResults = queryGBrain(query);
+  } catch (err) {
+    console.error("GBrain query failed:", err.message);
   }
 
-  // Use Gemini to organize results by source
-  const prompt = `Organize and summarize the following search results (max 500 words). Group by source type if identifiable (emails, Teams, WhatsApp). Include source attribution and date for each item. Present a unified summary.
+  const prompt = `You are a helpful personal AI assistant. Answer the user's query or message.
+We searched the user's personal knowledge base (emails, meetings, messages) for: "${query}".
+Here are the search results:
+---
+${rawResults && rawResults.trim().length > 0 ? rawResults : "(No matching records found in database)"}
+---
 
-Search query: "${query}"
+Instructions:
+1. If the search results contain relevant information to answer the query, use them to formulate a complete, helpful, and structured response. Cite sources (e.g., email subject, sender, date) when appropriate.
+2. If the query is a general question (e.g., "who are you?", "hello", general trivia, or general help) and the database results are empty/irrelevant, answer the query directly and politely as a personal assistant.
+3. If the user is specifically looking for information that is not in the database and not in general knowledge, let them know you couldn't find it in their emails, messages, or meetings, and suggest what they could search for instead.
 
-Results:
-${rawResults}`;
+User query/message: "${query}"`;
 
   try {
     return await generateResponse(prompt);
-  } catch {
-    return rawResults;
+  } catch (err) {
+    return rawResults || "I tried to search my memory but encountered an error. Please try again.";
   }
 }
 

@@ -35,6 +35,8 @@ function parseBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  console.log(`📡 [HTTP] ${req.method} ${req.url}`);
+
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
   // Webhook verification (GET)
@@ -54,8 +56,19 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Temporary test route (POST)
+  if (req.method === "POST" && url.pathname === "/test") {
+    console.log("✅ Test POST received");
+    const body = await parseBody(req);
+    console.log(body);
+    res.writeHead(200);
+    res.end("OK");
+    return;
+  }
+
   // Incoming messages (POST)
   if (req.method === "POST" && url.pathname === "/webhook") {
+    console.log("🔥 POST /webhook received");
     const body = await parseBody(req);
 
     // Respond 200 immediately (Meta requires quick response)
@@ -64,22 +77,36 @@ const server = http.createServer(async (req, res) => {
 
     if (!body) return;
 
+    // Log the raw webhook payload
+    console.log("Incoming Webhook Payload:", JSON.stringify(body, null, 2));
+
     // Parse messages
     const messages = parseWebhookMessages(body);
 
     for (const msg of messages) {
-      console.log(`📱 WhatsApp from ${msg.senderName} (${msg.from}): ${msg.text}`);
+      try {
+        console.log(`📱 WhatsApp from ${msg.senderName} (${msg.from}): ${msg.text}`);
 
-      // Mark as read
-      await markAsRead(msg.id).catch(() => {});
+        // Mark as read
+        await markAsRead(msg.id).catch(() => {});
 
-      // Process and optionally respond
-      const response = await processIncomingMessage(msg);
+        console.log("📩 Processing message...");
+        const response = await processIncomingMessage(msg);
+        console.log("🤖 Agent response:", response);
 
-      if (response) {
-        await sendWhatsAppMessage(msg.from, response).catch((err) => {
-          console.error("Failed to send WhatsApp reply:", err.message);
-        });
+        if (response) {
+          console.log("📤 Sending WhatsApp reply...");
+          try {
+            await sendWhatsAppMessage(msg.from, response);
+            console.log("✅ Reply sent");
+          } catch (err) {
+            console.error("❌ Send failed:", err);
+          }
+        } else {
+          console.log("⚠️ No response returned by processIncomingMessage()");
+        }
+      } catch (err) {
+        console.error(`Error processing webhook message from ${msg.from}:`, err);
       }
     }
     return;

@@ -77,32 +77,41 @@ export async function processCommand(message) {
 
       case "unknown":
       default:
-        return [
-          "I'm not sure what you're asking. Here's what I can help with:",
-          "",
-          "📧 **Emails**",
-          "• `search emails about [topic]` — semantic search",
-          "• `search emails from [sender]` — filter by sender",
-          "• `summarize today's emails` — AI summary",
-          "• `show important emails` — priority ranked",
-          "• `show pending action items` — extract tasks",
-          "",
-          "📅 **Calendar & Meetings**",
-          "• `what meetings do I have today`",
-          "• `upcoming meetings`",
-          "• `prepare me for [meeting/person]` — brief with past context",
-          "• `show recent meetings` — stored meeting summaries",
-          "",
-          "📋 **Reports**",
-          "• `give me my daily report` — full productivity overview",
-          "",
-          "💬 **WhatsApp**",
-          "• `search WhatsApp about [topic]`",
-          "• `summarize WhatsApp chat`",
-          "",
-          "🔍 **General**",
-          "• `what do I know about [topic]` — search all sources",
-        ].join("\n");
+        const lowerMessage = message.toLowerCase().trim();
+        if (
+          lowerMessage === "help" ||
+          lowerMessage === "commands" ||
+          lowerMessage === "what can you do" ||
+          lowerMessage === "menu"
+        ) {
+          return [
+            "Here's what I can help you with:",
+            "",
+            "📧 **Emails**",
+            "• `search emails about [topic]` — semantic search in GBrain",
+            "• `search emails from [sender]` — filter by sender",
+            "• `summarize today's emails` — AI summary of recent emails",
+            "• `show important emails` — priority-ranked urgent emails",
+            "• `show pending action items` — extract tasks and deadlines",
+            "",
+            "📅 **Calendar & Meetings**",
+            "• `what meetings do I have today` — Google Calendar events",
+            "• `upcoming meetings` — next 24h events",
+            "• `prepare me for [meeting/person]` — briefing with past context",
+            "• `show recent meetings` — stored meeting summaries",
+            "",
+            "📋 **Reports**",
+            "• `give me my daily report` — full productivity overview",
+            "",
+            "💬 **WhatsApp**",
+            "• `search WhatsApp about [topic]` — search stored WhatsApp messages",
+            "• `summarize WhatsApp chat` — summarize recent WhatsApp chats",
+            "",
+            "🔍 **General**",
+            "• Ask me *any question* directly! I will query your emails, messages, and meetings to answer it.",
+          ].join("\n");
+        }
+        return await crossSourceSearch(message);
     }
   } catch (err) {
     console.error("Orchestrator error:", err.message);

@@ -56,6 +56,8 @@ client.on("messageCreate", async (message) => {
   // Ignore bot messages
   if (message.author.bot) return;
 
+  console.log(`💬 Discord msg from ${message.author.tag} in channel ${message.channel.id} (Guild: ${message.guild?.name || "DM"}): "${message.content}"`);
+
   // Only respond in the configured channel or DMs
   const isConfiguredChannel = message.channel.id === config.discord.channelId;
   const isDM = !message.guild;

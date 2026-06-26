@@ -109,7 +109,8 @@ ${results}`;
 
       try {
         return await generateResponse(prompt);
-      } catch {
+      } catch (err) {
+        console.error("Error generating response in processIncomingMessage:", err);
         return null;
       }
     }
