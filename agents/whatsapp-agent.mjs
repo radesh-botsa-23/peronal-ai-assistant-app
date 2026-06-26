@@ -111,7 +111,17 @@ ${results}`;
         return await generateResponse(prompt);
       } catch (err) {
         console.error("Error generating response in processIncomingMessage:", err);
-        return null;
+        const errMsg = (err && err.message) ? err.message : String(err);
+        if (
+          errMsg.includes("429") ||
+          errMsg.includes("quota") ||
+          errMsg.includes("limit") ||
+          errMsg.includes("overloaded") ||
+          errMsg.includes("RESOURCE_EXHAUSTED")
+        ) {
+          return "⚠️ The AI Assistant is currently rate-limited or experiencing high load. Please try again in a few minutes.";
+        }
+        return "⚠️ Sorry, I encountered an error while processing your request. Please try again.";
       }
     }
   }
