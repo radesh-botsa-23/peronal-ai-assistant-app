@@ -196,29 +196,22 @@ console.log("🚀 Personal AI Assistant — Starting services...\n");
 
 const processes = [];
 
-function spawnProcess(name, file, env = {}) {
-  const proc = spawn("node", [path.join(__dirname, file)], {
-    stdio: "inherit",
-    env: { ...process.env, ...env },
-  });
-  proc.on("error", (err) => console.error(`[${name}] Error:`, err.message));
-  proc.on("exit", (code) => {
-    if (code !== 0) console.error(`[${name}] Exited with code ${code}`);
-  });
-  processes.push(proc);
-  console.log(`✅ Started: ${name}`);
-  return proc;
-}
+// Start services in-process (saves memory by combining Node.js runtimes)
+console.log("🟢 Starting background services in-process...");
 
-// Always start the Discord bot
-spawnProcess("Discord Bot", "discord-bot.mjs");
+import("./discord-bot.mjs").catch((err) => {
+  console.error("❌ [Discord Bot] Failed to load:", err.message);
+});
 
-// Always start the ingestion pipeline
-spawnProcess("Email Ingestion", "ingestion-pipeline.mjs");
+import("./ingestion-pipeline.mjs").catch((err) => {
+  console.error("❌ [Email Ingestion] Failed to load:", err.message);
+});
 
-// Start WhatsApp webhook only if access token is configured
 if (config.whatsapp.accessToken) {
-  spawnProcess("WhatsApp Webhook", "whatsapp-webhook.mjs");
+  import("./whatsapp-webhook.mjs").catch((err) => {
+    console.error("❌ [WhatsApp Webhook] Failed to load:", err.message);
+  });
+  console.log("✅ Loaded WhatsApp webhook agent in-process.");
 } else {
   console.log("⏭️  WhatsApp webhook skipped (WHATSAPP_ACCESS_TOKEN not set)");
 }
