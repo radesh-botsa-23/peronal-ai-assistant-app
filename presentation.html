@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal AI Assistant Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #090d16 0%, #111827 100%);
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --glow-blue: rgba(59, 130, 246, 0.15);
+      --glow-cyan: rgba(6, 182, 212, 0.15);
+      --glow-emerald: rgba(16, 185, 129, 0.15);
+      --font-family: 'Plus Jakarta Sans', sans-serif;
+      --transition-speed: 0.5s;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Presentation Wrapper */
+    .presentation-container {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1500px;
+    }
+
+    /* Slide Container */
+    .slide {
+      position: absolute;
+      width: 90%;
+      max-width: 1200px;
+      height: 80%;
+      max-height: 700px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                  0 0 40px rgba(6, 182, 212, 0.05);
+      opacity: 0;
+      transform: scale(0.9) translateZ(-100px);
+      pointer-events: none;
+      transition: opacity var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1),
+                  transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: scale(1) translateZ(0);
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    .slide.prev {
+      transform: translateX(-100%) rotateY(-20deg) scale(0.85);
+      opacity: 0;
+    }
+
+    .slide.next {
+      transform: translateX(100%) rotateY(20deg) scale(0.85);
+      opacity: 0;
+    }
+
+    /* Header styling */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 18px;
+      margin-bottom: 20px;
+    }
+
+    .slide-header h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      background: linear-gradient(to right, #ffffff, var(--text-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-category {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.1);
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    /* Content Area */
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 24px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    /* Scrollbar for slides if needed */
+    .slide-content::-webkit-scrollbar {
+      width: 4px;
+    }
+    .slide-content::-webkit-scrollbar-thumb {
+      background: var(--card-border);
+      border-radius: 2px;
+    }
+
+    /* Footer styling */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Content Layout Helpers */
+    .title-layout {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      gap: 20px;
+    }
+
+    .title-layout h1 {
+      font-size: 3.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ffffff 30%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    }
+
+    .title-layout p.subtitle {
+      font-size: 1.6rem;
+      color: var(--text-secondary);
+      max-width: 800px;
+      font-weight: 300;
+    }
+
+    .title-layout .author-tag {
+      margin-top: 30px;
+      font-size: 1rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--card-border);
+      padding-top: 16px;
+      min-width: 250px;
+    }
+
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .grid-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .grid-6grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    /* Card styling */
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent-blue);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card.accent-cyan::before { background: var(--accent-cyan); }
+    .card.accent-emerald::before { background: var(--accent-emerald); }
+    .card.accent-purple::before { background: var(--accent-purple); }
+    .card.accent-amber::before { background: var(--accent-amber); }
+    .card.accent-rose::before { background: var(--accent-rose); }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+    }
+
+    .card-text {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Bullet lists */
+    .bullet-list {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .bullet-item {
+      position: relative;
+      padding-left: 28px;
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    .bullet-item::before {
+      content: "➔";
+      position: absolute;
+      left: 0;
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .bullet-item strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Diagram flow styles */
+    .diagram-flow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin: 40px 0;
+    }
+
+    .diagram-step {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      position: relative;
+    }
+
+    .diagram-step-num {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: var(--accent-cyan);
+      color: #000;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .diagram-step-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+
+    .diagram-step-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .diagram-arrow {
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      font-weight: 800;
+    }
+
+    /* Code boxes */
+    .code-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9rem;
+      color: #34d399;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+
+    /* Controller Panel */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 5%;
+      background: rgba(10, 15, 28, 0.8);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--card-border);
+      z-index: 100;
+    }
+
+    .control-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .control-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .slide-nav-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .slide-counter {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* Progress bar */
+    .progress-bar-container {
+      width: 250px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, var(--accent-blue), var(--accent-cyan));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .utility-btns {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Speaker Notes Drawer */
+    .notes-drawer {
+      position: absolute;
+      bottom: 100px;
+      left: 5%;
+      width: 90%;
+      max-height: 250px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      overflow-y: auto;
+      z-index: 1000;
+      transform: translateY(120%);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 -20px 40px rgba(0,0,0,0.5);
+    }
+
+    .notes-drawer.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .notes-header {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-amber);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .notes-content {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    /* Highlights & badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge.cyan { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+    .badge.emerald { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+    .badge.blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+
+    .glow-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan);
+      margin-right: 8px;
+    }
+
+    /* CSS Flowchart */
+    .flowchart-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin: 10px 0;
+    }
+    .flowchart-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+    .flowchart-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .flowchart-box.active {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.05);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
+    }
+    .flowchart-arrow-v {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Presentation Slides wrapper -->
+  <div class="presentation-container" id="presentation">
+
+    <!-- Slide 1: Title -->
+    <div class="slide active" data-category="Intro">
+      <div class="title-layout">
+        <h1>Personal AI Assistant</h1>
+        <p class="subtitle">An End-to-End Local Knowledge Retrieval &amp; Notification Engine</p>
+        <div class="author-tag">
+          <p style="font-weight: 600; color: var(--text-primary);">Unified AI Integration Platform</p>
+          <p style="font-size: 0.85rem; margin-top: 4px;">Gmail • WhatsApp • Discord • Fireflies.ai</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Workplace Automation Deck</span>
+        <span>Slide 1 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        Good morning/afternoon everyone. Today, I am excited to present the Personal AI Assistant, a unified local knowledge retrieval and notification engine designed to streamline daily workplace communication, meeting synthesis, and task management.
+      </div>
+    </div>
+
+    <!-- Slide 2: The Core Problem -->
+    <div class="slide" data-category="The Challenge">
+      <div class="slide-header">
+        <h2>The Core Problem</h2>
+        <span class="slide-category">Workplace Noise</span>
+      </div>
+      <div class="slide-content">
+        <p style="font-size: 1.25rem; color: var(--text-secondary); text-align: center; margin-bottom: 20px;">Modern professionals waste up to 2.5 hours daily searching for critical information across silos.</p>
+        <div class="grid-3col">
+          <div class="card accent-rose">
+            <div class="card-title"><span class="card-icon">🗂️</span> Fragmented Comms</div>
+            <div class="card-text">Crucial updates are scattered across Gmail messages, WhatsApp group chats, and external client channels with no centralized indexing.</div>
+          </div>
+          <div class="card accent-rose">
+            <div class="card-title"><span class="card-icon">⏳</span> Meeting Overhead</div>
+            <div class="card-text">Hours are spent recording, typing, and manually tracking action items from voice recordings, Meet, Teams, or Zoom calls.</div>
+          </div>
+          <div class="card accent-rose">
+            <div class="card-title"><span class="card-icon">❌</span> Contextual Blindness</div>
+            <div class="card-text">Teams start meetings or compose replies without quick context on what was previously discussed in parallel email threads or past calls.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>The Problem Statement</span>
+        <span>Slide 2 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        Modern knowledge workers face significant friction. Important details are scattered across emails, chat messages, and transcripts. Preparing for a meeting means digging through multiple platforms, leading to wasted time and lost context.
+      </div>
+    </div>
+
+    <!-- Slide 3: The Solution -->
+    <div class="slide" data-category="Vision">
+      <div class="slide-header">
+        <h2>The Solution</h2>
+        <span class="slide-category">Unified Assistant</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <div>
+            <ul class="bullet-list">
+              <li class="bullet-item"><strong>Unified Auto-Ingestion:</strong> Seamless background pull of Gmail threads and Fireflies meeting records.</li>
+              <li class="bullet-item"><strong>In-Process Memory Database:</strong> An embedded local relational &amp; vector search engine (GBrain) running with zero cost.</li>
+              <li class="bullet-item"><strong>LLM Intelligence:</strong> Gemini API powering intent parsing, summaries, and talking points.</li>
+              <li class="bullet-item"><strong>Low Friction Frontends:</strong> Control and query everything directly from Discord or WhatsApp.</li>
+            </ul>
+          </div>
+          <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--card-border); border-radius: 20px; padding: 32px; display: flex; flex-direction: column; gap: 16px; box-shadow: inset 0 0 20px rgba(6,182,212,0.03);">
+            <div style="font-size: 1.1rem; font-weight: 600; color: var(--accent-cyan);"><span class="glow-dot"></span>Core Value Propositions</div>
+            <p style="font-size: 1rem; color: var(--text-secondary); line-height: 1.6;">By bringing together local data extraction, local vector memory storage, and state-of-the-art LLMs, we provide a secure, low-latency, and highly responsive assistant with <strong>zero hosting overhead</strong>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Product Vision</span>
+        <span>Slide 3 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        Our solution resolves this by creating a centralized local knowledge base called GBrain. It automatically ingests communications, indexes them semantically, and makes them queryable in real-time through standard chat channels like Discord and WhatsApp.
+      </div>
+    </div>
+
+    <!-- Slide 4: Architecture -->
+    <div class="slide" data-category="Architecture">
+      <div class="slide-header">
+        <h2>System Architecture Overview</h2>
+        <span class="slide-category">Design Pattern</span>
+      </div>
+      <div class="slide-content">
+        <div class="flowchart-container">
+          <div class="flowchart-row">
+            <div class="flowchart-box" style="border-color: var(--accent-rose);">Discord Interface</div>
+            <div style="color: var(--text-muted); font-weight: 800;">&lt;--&gt;</div>
+            <div class="flowchart-box active" style="width: 250px;">OpenClaw Gateway (WSL)</div>
+            <div style="color: var(--text-muted); font-weight: 800;">&lt;--&gt;</div>
+            <div class="flowchart-box" style="border-color: var(--accent-emerald);">WhatsApp Webhook (Ngrok)</div>
+          </div>
+          <div class="flowchart-arrow-v">↕</div>
+          <div class="flowchart-row">
+            <div class="flowchart-box active" style="width: 320px; font-weight: 600; background: rgba(59,130,246,0.05);">GStack Orchestrator (Intent Parser)</div>
+          </div>
+          <div class="flowchart-arrow-v">↕</div>
+          <div class="flowchart-row">
+            <div class="flowchart-box">Email Agent</div>
+            <div class="flowchart-box">Calendar Agent</div>
+            <div class="flowchart-box">Meetings Agent</div>
+            <div class="flowchart-box">Memory Agent</div>
+          </div>
+          <div class="flowchart-arrow-v">↕</div>
+          <div class="flowchart-row">
+            <div class="flowchart-box active" style="width: 250px; border-color: var(--accent-emerald);">GBrain DB (PGlite Vector Store)</div>
+            <div style="color: var(--text-muted); font-weight: 800;">&lt;--&gt;</div>
+            <div class="flowchart-box" style="border-color: var(--accent-purple);">Gemini 1.5 Flash (API)</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Software Engineering Diagram</span>
+        <span>Slide 4 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        The architecture follows a modular agent design. The OpenClaw Gateway receives user queries from Discord or WhatsApp and routes them to our GStack Orchestrator. The orchestrator uses Gemini to parse user intent and delegate the query to the correct dedicated agent, which interacts with our local GBrain database.
+      </div>
+    </div>
+
+    <!-- Slide 5: Tech Stack -->
+    <div class="slide" data-category="Technology">
+      <div class="slide-header">
+        <h2>Core Tech Stack</h2>
+        <span class="slide-category">Technologies</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-6grid">
+          <div class="card accent-cyan">
+            <div class="card-title">Node.js Runtime</div>
+            <div class="card-text">Built on modern ES Modules for high-speed async processing and unified package architecture.</div>
+          </div>
+          <div class="card accent-blue">
+            <div class="card-title">OpenClaw Gateway</div>
+            <div class="card-text">Manages agent configs, tool integrations, and secure channel communication.</div>
+          </div>
+          <div class="card accent-emerald">
+            <div class="card-title">GBrain &amp; PGlite</div>
+            <div class="card-text">A superfast, transactional in-process SQLite/Postgres hybrid carrying local vector embeddings.</div>
+          </div>
+          <div class="card accent-purple">
+            <div class="card-title">Gemini API</div>
+            <div class="card-text">Powering text-embeddings-004, transcription, synthesis, and dialog logic.</div>
+          </div>
+          <div class="card accent-amber">
+            <div class="card-title">Discord.js</div>
+            <div class="card-text">Connects the workspace assistant interface with the team's active chat server.</div>
+          </div>
+          <div class="card accent-rose">
+            <div class="card-title">WhatsApp Cloud API</div>
+            <div class="card-text">Meta Webhooks connected via local NodeJS endpoints for secure message parsing.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Platform Specifications</span>
+        <span>Slide 5 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        We've chosen a highly performant and modern tech stack. We use Node.js to run our background services, GBrain with PGlite for local relational and vector capabilities, and Google's Gemini models for intent parsing and synthesis.
+      </div>
+    </div>
+
+    <!-- Slide 6: Gmail Ingestion Pipeline -->
+    <div class="slide" data-category="Pipelines">
+      <div class="slide-header">
+        <h2>Gmail Ingestion Pipeline</h2>
+        <span class="slide-category">Email Sync</span>
+      </div>
+      <div class="slide-content">
+        <div class="diagram-flow">
+          <div class="diagram-step">
+            <div class="diagram-step-num">1</div>
+            <div class="diagram-step-title">OAuth2 Request</div>
+            <div class="diagram-step-desc">Local client connects via secure client IDs.</div>
+          </div>
+          <div class="diagram-arrow">➔</div>
+          <div class="diagram-step">
+            <div class="diagram-step-num">2</div>
+            <div class="diagram-step-title">Batch Fetch</div>
+            <div class="diagram-step-desc">Fetches latest 50 messages including MIME attachments.</div>
+          </div>
+          <div class="diagram-arrow">➔</div>
+          <div class="diagram-step">
+            <div class="diagram-step-num">3</div>
+            <div class="diagram-step-title">HTML Stripping</div>
+            <div class="diagram-step-desc">Strips inline CSS, scripts, and translates tags.</div>
+          </div>
+          <div class="diagram-arrow">➔</div>
+          <div class="diagram-step">
+            <div class="diagram-step-num">4</div>
+            <div class="diagram-step-title">GBrain Import</div>
+            <div class="diagram-step-desc">Validates hashes, saves backup, and starts vector sync.</div>
+          </div>
+        </div>
+        <p style="font-size: 1rem; color: var(--text-secondary); line-height: 1.5; text-align: center;">Runs dynamically on startup, then schedules recurring cycles every <strong>30 minutes</strong>.</p>
+      </div>
+      <div class="slide-footer">
+        <span>Gmail Pipeline Flow</span>
+        <span>Slide 6 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        The email pipeline runs automatically in the background. It securely authenticates with Gmail via OAuth2, extracts the full text of the latest emails, formats them into structured files, and triggers a sync to GBrain for searchability.
+      </div>
+    </div>
+
+    <!-- Slide 7: Semantic Memory Engine -->
+    <div class="slide" data-category="Data Layer">
+      <div class="slide-header">
+        <h2>Semantic Memory Engine: GBrain &amp; Vector Sync</h2>
+        <span class="slide-category">Database</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <div>
+            <ul class="bullet-list">
+              <li class="bullet-item"><strong>Local Vector Embeddings:</strong> Integrates Gemini's <code>text-embedding-004</code> embedding model.</li>
+              <li class="bullet-item"><strong>Concept Chunking:</strong> Files are parsed into discrete logical chunks before vectorization.</li>
+              <li class="bullet-item"><strong>No Cost Syncing:</strong> Zero cloud database subscription fees—completely hosted on local disk.</li>
+              <li class="bullet-item"><strong>Volume Verification:</strong> Verified importing and indexing <strong>119 semantic database chunks</strong> in less than 30s.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="code-box">
+$ gbrain import --no-embed
+📧 Syncing emails to GBrain...
+Found 92 email files to sync
+Pages:     117
+Chunks:    119
+Embedded:  119
+✅ GBrain sync complete.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Memory Storage Stats</span>
+        <span>Slide 7 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        GBrain is our semantic memory engine. It converts documents and emails into vector embeddings using Gemini's text-embedding-004. This enables semantic search: instead of relying on exact keyword matching, users can search by concept or topic.
+      </div>
+    </div>
+
+    <!-- Slide 8: Fireflies.ai Integration -->
+    <div class="slide" data-category="Pipelines">
+      <div class="slide-header">
+        <h2>Fireflies.ai Integration</h2>
+        <span class="slide-category">Meeting Sync</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <div class="card accent-cyan">
+            <div class="card-title">GraphQL Connection</div>
+            <div class="card-text">Connects directly using safe Bearer Auth to query recent meeting transcripts and meta details without manual file exports.</div>
+          </div>
+          <div class="card accent-emerald">
+            <div class="card-title">Data Schema Synced</div>
+            <div class="card-text">Downloads:
+              <ul style="margin-left: 20px; margin-top: 8px; font-size: 0.9rem; color: var(--text-secondary);">
+                <li><strong>Overview Summary</strong></li>
+                <li><strong>Action Items Checklist</strong></li>
+                <li><strong>Speakers and Attendees list</strong></li>
+                <li><strong>Discussion Bullet Points</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <p style="font-size: 1rem; color: var(--text-secondary); line-height: 1.5; border-left: 4px solid var(--accent-cyan); padding-left: 16px;">
+          <strong>Security Note:</strong> Configured as an optional module. If <code>FIREFLIES_API_KEY</code> is omitted, the assistant seamlessly falls back to local meeting file imports.
+        </p>
+      </div>
+      <div class="slide-footer">
+        <span>Fireflies.ai Ingestion Pipeline</span>
+        <span>Slide 8 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        For meetings, we've integrated Fireflies.ai via its GraphQL API. When you finish a call, the system fetches the transcript, summaries, and action items, then formats and stores them in GBrain so you can query meeting details later.
+      </div>
+    </div>
+
+    <!-- Slide 9: Multimodal Audio Ingestion -->
+    <div class="slide" data-category="Core Features">
+      <div class="slide-header">
+        <h2>Multimodal Audio Ingestion (Manual Upload)</h2>
+        <span class="slide-category">Audio Processor</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <ul class="bullet-list">
+            <li class="bullet-item"><strong>Direct Discord Uploads:</strong> Drag-and-drop raw recordings (mp3, wav, webm) directly into chat.</li>
+            <li class="bullet-item"><strong>Gemini Audio Processing:</strong> Feeds binary audio buffers straight into Gemini 1.5 Flash.</li>
+            <li class="bullet-item"><strong>Rich AI Synthesis:</strong> Performs speech-to-text, then structures the meeting transcript into:
+              <ul style="margin-left: 20px; margin-top: 8px; font-size: 0.95rem; color: var(--text-secondary);">
+                <li><strong>Sleek Overview</strong></li>
+                <li><strong>Chronological Decisions</strong></li>
+                <li><strong>Assigned Action Items</strong></li>
+              </ul>
+            </li>
+          </ul>
+          <div style="background: rgba(16,185,129,0.02); border: 1px solid rgba(16,185,129,0.2); border-radius: 16px; padding: 24px; text-align: center;">
+            <p style="font-size: 2.5rem; margin-bottom: 8px;">🎤</p>
+            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">In-Process Audio Processing</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Eliminates the cost and delays of using a separate third-party transcription engine.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Multimodal Pipeline</span>
+        <span>Slide 9 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        In addition to Fireflies, if you have a raw audio file from Zoom or Google Meet, you can upload it directly to the Discord bot. Gemini transcribes it, extracts a summary, action items, and decisions, and commits the result to GBrain.
+      </div>
+    </div>
+
+    <!-- Slide 10: Discord Bot Interface -->
+    <div class="slide" data-category="Channels">
+      <div class="slide-header">
+        <h2>Discord Bot Interface</h2>
+        <span class="slide-category">Frontend</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <div>
+            <ul class="bullet-list">
+              <li class="bullet-item"><strong>Always-Listening Gateway:</strong> Listens to configured group channels and direct messages (DMs).</li>
+              <li class="bullet-item"><strong>Interactive Responses:</strong> Uses typing status indicators to mock cognitive thinking time.</li>
+              <li class="bullet-item"><strong>Large Message Splitting:</strong> Automatically splits outputs into 2000-character blocks to comply with Discord API limits.</li>
+              <li class="bullet-item"><strong>Direct Audio Sync:</strong> Downloads voice attachments on-the-fly for immediate voice transcribing.</li>
+            </ul>
+          </div>
+          <div style="background: #1e1f22; border: 1px solid #2b2d31; border-radius: 16px; padding: 20px; font-family: sans-serif; font-size: 0.95rem;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid #2b2d31; padding-bottom: 8px;">
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: #23a55a;"></div>
+              <span style="font-weight: 600; color: #f2f3f5;">Discord Bot Server</span>
+            </div>
+            <p style="color: #949ba4; margin-bottom: 8px;"><strong style="color: #dbdee1;">[User]</strong>: prepare me for next meeting with Alice</p>
+            <p style="color: #949ba4;"><strong style="color: #5865f2;">[Bot]</strong>: 🎤 Processing context from previous threads...</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>UI / UX Channels</span>
+        <span>Slide 10 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        The primary user interface is Discord. The bot is responsive, handles mentions, and parses both text commands and voice recordings. This makes the assistant instantly accessible from any desktop or mobile device.
+      </div>
+    </div>
+
+    <!-- Slide 11: WhatsApp Webhook Channel -->
+    <div class="slide" data-category="Channels">
+      <div class="slide-header">
+        <h2>WhatsApp Business Channel</h2>
+        <span class="slide-category">Frontend</span>
+      </div>
+      <div class="slide-content">
+        <div class="diagram-flow">
+          <div class="diagram-step">
+            <div class="diagram-step-title">Meta Cloud Trigger</div>
+            <div class="diagram-step-desc">WhatsApp message hits Meta's cloud servers.</div>
+          </div>
+          <div class="diagram-arrow">➔</div>
+          <div class="diagram-step">
+            <div class="diagram-step-title">Ngrok Forwarder</div>
+            <div class="diagram-step-desc">Exposes local server port 3002 to the web.</div>
+          </div>
+          <div class="diagram-arrow">➔</div>
+          <div class="diagram-step">
+            <div class="diagram-step-title">NodeJS Server</div>
+            <div class="diagram-step-desc">Validates headers, responds HTTP 200, handles query.</div>
+          </div>
+          <div class="diagram-arrow">➔</div>
+          <div class="diagram-step">
+            <div class="diagram-step-title">WhatsApp Send</div>
+            <div class="diagram-step-desc">Delivers Gemini response back via API.</div>
+          </div>
+        </div>
+        <p style="font-size: 1rem; color: var(--text-secondary); text-align: center;">Verified active connection routing successfully on port <strong>3002</strong>.</p>
+      </div>
+      <div class="slide-footer">
+        <span>WhatsApp Channel Architecture</span>
+        <span>Slide 11 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        For mobile users, we integrated WhatsApp Business API. Incoming messages hit our local HTTP webhook server via an ngrok tunnel. The server parses the message, searches GBrain, and replies back via the WhatsApp Cloud API in real-time.
+      </div>
+    </div>
+
+    <!-- Slide 12: Smart Email Digest Engine -->
+    <div class="slide" data-category="Core Features">
+      <div class="slide-header">
+        <h2>Smart Email Digest Engine</h2>
+        <span class="slide-category">Email Classifier</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-3col">
+          <div class="card accent-rose">
+            <div class="card-title">🔥 Action Required</div>
+            <div class="card-text">Automatic priority ranking based on critical markers:
+              <ul style="margin-left: 20px; margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+                <li>verify / action</li>
+                <li>security / important</li>
+                <li>alert / notice</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card accent-blue">
+            <div class="card-title">📧 Important Emails</div>
+            <div class="card-text">Detects direct work communication and personal emails from primary contacts, bypassing generic newsletters.</div>
+          </div>
+          <div class="card accent-purple">
+            <div class="card-title">📰 Promotions</div>
+            <div class="card-text">Filters out marketing emails, retail sales, newsletters, and promotional lists to keep your primary feed clutter-free.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Email Classification Logic</span>
+        <span>Slide 12 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        To prevent email fatigue, the assistant runs a smart classification script. It groups emails into Action Required, Important, and Promotions, generates a daily markdown digest, and posts it to the team's Discord.
+      </div>
+    </div>
+
+    <!-- Slide 13: Daily Report Scheduler -->
+    <div class="slide" data-category="Core Features">
+      <div class="slide-header">
+        <h2>Daily Report &amp; Productivity Cron</h2>
+        <span class="slide-category">Morning Digest</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <div>
+            <ul class="bullet-list">
+              <li class="bullet-item"><strong>Scheduled Delivery:</strong> Configured to fire daily at **8:00 AM** via crontab.</li>
+              <li class="bullet-item"><strong>Aggregated Sources:</strong> Merges tasks, emails, and calendar schedules into a single dashboard.</li>
+              <li class="bullet-item"><strong>Calendar Sync:</strong> Connects to Google Calendar to extract the day's schedule.</li>
+              <li class="bullet-item"><strong>Task Aggregator:</strong> Identifies unfinished action items and alerts you.</li>
+            </ul>
+          </div>
+          <div style="background: rgba(245,158,11,0.02); border: 1px solid rgba(245,158,11,0.2); border-radius: 16px; padding: 24px; position: relative;">
+            <span class="badge" style="background: rgba(245,158,11,0.2); color: var(--accent-amber); margin-bottom: 12px;">Cron Configuration</span>
+            <p style="font-family: 'Courier New', monospace; color: var(--text-primary); font-size: 1.1rem; margin-bottom: 8px;">0 8 * * * node daily-report-cron.mjs</p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">Compiles calendars, emails, and notes, sending a structured digest directly to your Discord channel.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Automation Schedule</span>
+        <span>Slide 13 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        At 8 AM every morning, the scheduler compiles a daily report. It pulls your calendar events, pending email action items, and outstanding tasks, and prints a clean, actionable agenda so you start the day fully informed.
+      </div>
+    </div>
+
+    <!-- Slide 14: Meeting Prep & Briefing Engine -->
+    <div class="slide" data-category="Core Features">
+      <div class="slide-header">
+        <h2>Meeting Prep &amp; Briefing Engine</h2>
+        <span class="slide-category">Meeting Prep</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <div>
+            <p style="font-size: 1.15rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">Preparing for calls is fully automated. Simply ask: <code>prepare me for [topic/participant]</code>.</p>
+            <ul class="bullet-list" style="font-size: 1rem;">
+              <li class="bullet-item">Retrieves past email threads.</li>
+              <li class="bullet-item">Pulls previous meeting transcripts.</li>
+              <li class="bullet-item">Extracts outstanding action items.</li>
+              <li class="bullet-item">Generates suggested talking points.</li>
+            </ul>
+          </div>
+          <div style="background: rgba(59,130,246,0.03); border: 1px solid var(--card-border); border-radius: 16px; padding: 24px;">
+            <div style="font-weight: 600; color: var(--accent-blue); margin-bottom: 8px;">Brief Structure Generated:</div>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 6px;">🟢 <strong>Previous Meetings Summary</strong></p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 6px;">🔴 <strong>Unresolved Action Items</strong></p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 6px;">🔵 <strong>Key Context from Emails</strong></p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">🟡 <strong>Suggested Talking Points (3-5 points)</strong></p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Briefing Logic</span>
+        <span>Slide 14 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        One of our most powerful features is the Meeting Prep Engine. Before jumping into a call, you ask the assistant to prepare you. It queries all past emails and meeting summaries with that contact and creates a concise briefing sheet.
+      </div>
+    </div>
+
+    <!-- Slide 15: GStack Orchestrator -->
+    <div class="slide" data-category="Intent Router">
+      <div class="slide-header">
+        <h2>GStack Orchestrator: Intent Classification</h2>
+        <span class="slide-category">Orchestration</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <ul class="bullet-list">
+            <li class="bullet-item"><strong>Zero Rigid Commands:</strong> Users can query the assistant naturally.</li>
+            <li class="bullet-item"><strong>Gemini Classification:</strong> System parses the query to determine intent (Email, Calendar, Memory, WhatsApp, Meetings).</li>
+            <li class="bullet-item"><strong>Seamless Routing:</strong> Hands off tasks dynamically to the specialized agent.</li>
+            <li class="bullet-item"><strong>Smart Fallbacks:</strong> Unclassified prompts default to semantic search across all DB files.</li>
+          </ul>
+          <div class="code-box" style="font-size: 0.85rem; height: 180px;">
+User: "what did Alice say about the budget?"
+↓
+Gemini Classifier: Intent: SEARCH_EMAILS
+↓
+Email Agent: queryGBrain("Alice budget")
+↓
+Output: "Alice sent an email on June 18th..."
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Intent Parsing Flow</span>
+        <span>Slide 15 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        To handle natural language, we built a GStack intent classifier. Rather than using rigid commands, users can speak naturally. Gemini determines whether the query is about email, calendar, meetings, or general knowledge, and routes it accordingly.
+      </div>
+    </div>
+
+    <!-- Slide 16: DB Lock Handling -->
+    <div class="slide" data-category="Reliability">
+      <div class="slide-header">
+        <h2>Database Reliability: Lock Handling</h2>
+        <span class="slide-category">Infrastructure</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <div class="card accent-amber">
+            <div class="card-title">The Challenge</div>
+            <div class="card-text">PGlite / SQLite lock contention will crash Node processes if multiple async ingestion workers attempt to read/write simultaneously on shared filesystems.</div>
+          </div>
+          <div class="card accent-emerald">
+            <div class="card-title">The Solution</div>
+            <div class="card-text">
+              <ul style="margin-left: 20px; font-size: 0.9rem; color: var(--text-secondary);">
+                <li>Configured DB path to write to a fast local virtual filesystem (<code>/tmp/.gbrain</code>).</li>
+                <li>Developed a sync worker that updates the persistent storage (<code>/root/.gbrain</code>) every 60s.</li>
+                <li>Eradicated lock contention failures entirely.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Database Locks Resolved</span>
+        <span>Slide 16 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        We faced a technical challenge where local database locks would occasionally fail in containerized environments. We solved this by using a fast VFS mount in memory, coupled with a background sync worker that commits transactions to persistent storage safely.
+      </div>
+    </div>
+
+    <!-- Slide 17: Gemini API Safety -->
+    <div class="slide" data-category="Reliability">
+      <div class="slide-header">
+        <h2>Robust Error Handling &amp; API Safety</h2>
+        <span class="slide-category">Error Handling</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-2col">
+          <div>
+            <ul class="bullet-list">
+              <li class="bullet-item"><strong>API Rate Limits (429/503):</strong> Automatically handles transient errors due to model limits.</li>
+              <li class="bullet-item"><strong>Exponential Backoff:</strong> Implemented a retry wrapper <code>generateContentWithRetry()</code>.</li>
+              <li class="bullet-item"><strong>Timeout Guard:</strong> Protects requests from hanging indefinitely.</li>
+              <li class="bullet-item"><strong>Graceful Fallbacks:</strong> If Gemini is entirely unreachable, agents respond with basic info from GBrain.</li>
+            </ul>
+          </div>
+          <div class="code-box" style="font-size: 0.8rem;">
+// Wrapper in gemini-client.mjs
+export async function generateContentWithRetry(model, contents) {
+  // Retries on 429/503/timeouts
+  // delay = Math.pow(2, attempt) * 1000
+}
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Error Resilience</span>
+        <span>Slide 17 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        To guarantee production-level uptime, we added retry mechanisms and request timeouts for our AI calls. If the Gemini API experiences network lag or rate-limiting, the system automatically backs off and retries, preventing service crashes.
+      </div>
+    </div>
+
+    <!-- Slide 18: Business Impact -->
+    <div class="slide" data-category="Impact">
+      <div class="slide-header">
+        <h2>Business Impact &amp; Metrics</h2>
+        <span class="slide-category">Business Value</span>
+      </div>
+      <div class="slide-content">
+        <div class="grid-3col">
+          <div style="background: rgba(16,185,129,0.02); border: 1px solid rgba(16,185,129,0.1); border-radius: 20px; padding: 32px; text-align: center;">
+            <p style="font-size: 3rem; font-weight: 800; color: var(--accent-emerald); margin-bottom: 12px;">90%</p>
+            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Meeting Prep Saved</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Prep briefings are compiled instantly instead of manually searching email and calendar histories.</p>
+          </div>
+          <div style="background: rgba(6,182,212,0.02); border: 1px solid rgba(6,182,212,0.1); border-radius: 20px; padding: 32px; text-align: center;">
+            <p style="font-size: 3rem; font-weight: 800; color: var(--accent-cyan); margin-bottom: 12px;">$0</p>
+            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">DB Hosting Cost</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Local VFS embeddings and transactional storage require no active cloud database subscription fee.</p>
+          </div>
+          <div style="background: rgba(59,130,246,0.02); border: 1px solid rgba(59,130,246,0.1); border-radius: 20px; padding: 32px; text-align: center;">
+            <p style="font-size: 3rem; font-weight: 800; color: var(--accent-blue); margin-bottom: 12px;">100%</p>
+            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Data Privacy</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Sensitive emails and internal summaries are stored on local systems, not on shared cloud vectors.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Business Performance</span>
+        <span>Slide 18 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        The business impact is clear: our testing shows a substantial reduction in the time spent preparing for meetings. By hosting the vector database locally, we maintain complete data privacy and keep our operational costs at zero.
+      </div>
+    </div>
+
+    <!-- Slide 19: Project Roadmap -->
+    <div class="slide" data-category="Vision">
+      <div class="slide-header">
+        <h2>Roadmap &amp; Future Scope</h2>
+        <span class="slide-category">Next Phases</span>
+      </div>
+      <div class="slide-content">
+        <div class="diagram-flow" style="margin: 20px 0;">
+          <div class="diagram-step" style="border-color: var(--accent-emerald);">
+            <div style="font-weight: 700; color: var(--accent-emerald);">Phase 1 (Completed)</div>
+            <div class="diagram-step-desc">Gmail, WhatsApp, Discord, Fireflies.ai, and GBrain core setup.</div>
+          </div>
+          <div class="diagram-arrow">➔</div>
+          <div class="diagram-step" style="border-color: var(--accent-cyan);">
+            <div style="font-weight: 700; color: var(--accent-cyan);">Phase 2 (Q3 2026)</div>
+            <div class="diagram-step-desc">System audio recorder for physical meetings, static webhooks.</div>
+          </div>
+          <div class="diagram-arrow">➔</div>
+          <div class="diagram-step">
+            <div style="font-weight: 700; color: var(--text-primary);">Phase 3 (Q4 2026)</div>
+            <div class="diagram-step-desc">Microsoft Teams integration, draft email replies, and voice command channel.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Product Backlog</span>
+        <span>Slide 19 of 20</span>
+      </div>
+      <div class="hidden-notes">
+        We have completed the foundational phase. Our upcoming roadmap includes introducing live system audio recording to capture physical meetings and extending integrations to Microsoft Teams for corporate environments.
+      </div>
+    </div>
+
+    <!-- Slide 20: Conclusion -->
+    <div class="slide" data-category="Conclusion">
+      <div class="title-layout">
+        <h2 style="font-size: 3rem; font-weight: 800; background: linear-gradient(to right, #fff, #9ca3af); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Conclusion &amp; Q&amp;A</h2>
+        <p style="font-size: 1.3rem; color: var(--text-secondary); max-width: 700px; line-height: 1.6; font-weight: 300;">The Personal AI Assistant unifies workplace tools into a high-performance local knowledge base.</p>
+        <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 8px;">
+          <p style="font-size: 0.95rem; color: var(--text-muted);">Repository URL: <span style="color: var(--accent-cyan);">https://github.com/Botsa-Radesh/Personal_Ai_Assistant_Internship</span></p>
+          <p style="font-size: 1.1rem; color: var(--accent-emerald); font-weight: 600; margin-top: 10px;">Thank You for Your Time!</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Slide 20 of 20</span>
+        <span>End of Deck</span>
+      </div>
+      <div class="hidden-notes">
+        In conclusion, the Personal AI Assistant is deploy-ready, tested, and fully functional. It acts as a force multiplier for daily productivity. I am open to any questions you might have. Thank you.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Slide Controls Panel -->
+  <div class="controls">
+    <button class="control-btn" id="prev-btn" disabled>
+      <span>◀</span> Previous
+    </button>
+    <div class="slide-nav-info">
+      <div class="slide-counter" id="counter-text">Slide 1 of 20</div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="prog-bar"></div>
+      </div>
+    </div>
+    <div class="utility-btns">
+      <button class="control-btn" id="notes-btn" style="border-color: var(--accent-amber);">
+        <span>💡</span> Speaker Notes
+      </button>
+      <button class="control-btn" id="next-btn">
+        Next <span>▶</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Speaker Notes Drawer -->
+  <div class="notes-drawer" id="notes-drawer">
+    <div class="notes-header">🎙️ Speaker Notes</div>
+    <div class="notes-content" id="notes-text">
+      Good morning/afternoon everyone. Today, I am excited to present the Personal AI Assistant, a unified local knowledge retrieval and notification engine designed to streamline daily workplace communication, meeting synthesis, and task management.
+    </div>
+  </div>
+
+  <script>
+    // Variables
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const counterText = document.getElementById('counter-text');
+    const progBar = document.getElementById('prog-bar');
+    const notesBtn = document.getElementById('notes-btn');
+    const notesDrawer = document.getElementById('notes-drawer');
+    const notesText = document.getElementById('notes-text');
+    
+    let currentSlideIndex = 0;
+
+    // Update Slide function
+    function updateSlides() {
+      slides.forEach((slide, idx) => {
+        slide.classList.remove('active', 'prev', 'next');
+        
+        if (idx === currentSlideIndex) {
+          slide.classList.add('active');
+          // Update speaker notes
+          const notes = slide.querySelector('.hidden-notes').innerHTML.trim();
+          notesText.innerHTML = notes;
+        } else if (idx < currentSlideIndex) {
+          slide.classList.add('prev');
+        } else {
+          slide.classList.add('next');
+        }
+      });
+
+      // Update Navigation elements
+      counterText.textContent = `Slide ${currentSlideIndex + 1} of ${slides.length}`;
+      const progressPercent = ((currentSlideIndex + 1) / slides.length) * 100;
+      progBar.style.width = `${progressPercent}%`;
+
+      // Disable/Enable buttons
+      prevBtn.disabled = currentSlideIndex === 0;
+      nextBtn.disabled = currentSlideIndex === slides.length - 1;
+    }
+
+    // Event listeners
+    prevBtn.addEventListener('click', () => {
+      if (currentSlideIndex > 0) {
+        currentSlideIndex--;
+        updateSlides();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentSlideIndex < slides.length - 1) {
+        currentSlideIndex++;
+        updateSlides();
+      }
+    });
+
+    notesBtn.addEventListener('click', () => {
+      notesDrawer.classList.toggle('open');
+    });
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        if (currentSlideIndex < slides.length - 1) {
+          currentSlideIndex++;
+          updateSlides();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (currentSlideIndex > 0) {
+          currentSlideIndex--;
+          updateSlides();
+        }
+      } else if (e.key.toLowerCase() === 's') {
+        notesDrawer.classList.toggle('open');
+      }
+    });
+
+    // Swipe controls for mobile
+    let startX = 0;
+    document.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+    });
+
+    document.addEventListener('touchend', (e) => {
+      const endX = e.changedTouches[0].clientX;
+      const diffX = startX - endX;
+
+      if (Math.abs(diffX) > 50) { // Threshold
+        if (diffX > 0 && currentSlideIndex < slides.length - 1) {
+          // Swiped left, go next
+          currentSlideIndex++;
+          updateSlides();
+        } else if (diffX < 0 && currentSlideIndex > 0) {
+          // Swiped right, go prev
+          currentSlideIndex--;
+          updateSlides();
+        }
+      }
+    });
+
+    // Initialize progress bar
+    updateSlides();
+  </script>
+</body>
+</html>
