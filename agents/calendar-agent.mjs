@@ -94,6 +94,6 @@ If limited info is available, note that.`;
   try {
     return await generateResponse(prompt);
   } catch {
-    return `## Meeting Brief: ${topic}\n\n${combinedContext}`;
+    return "Meeting brief generation is temporarily unavailable. Please try again.";
   }
 }

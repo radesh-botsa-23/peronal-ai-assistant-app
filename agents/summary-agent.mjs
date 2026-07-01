@@ -43,13 +43,6 @@ export async function getDailyReport() {
     );
     return `# 📋 Daily Productivity Report - ${today}\n\n${report}`;
   } catch {
-    // Fallback to basic format
-    let fallback = `# 📋 Daily Report - ${today}\n\n`;
-    if (calendarContext && calendarContext !== "Calendar unavailable.") {
-      fallback += `## 📅 Meetings\n${calendarContext}\n\n`;
-    }
-    if (emailsContext) fallback += `## 📧 Emails\n${emailsContext}\n\n`;
-    if (tasksContext) fallback += `## ✅ Tasks\n${tasksContext}\n\n`;
-    return fallback;
+    return "Daily productivity report generation is temporarily unavailable. Please try again.";
   }
 }

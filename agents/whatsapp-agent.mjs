@@ -82,7 +82,7 @@ ${filteredRaw}`;
   try {
     return await generateResponse(prompt);
   } catch {
-    return "Summarization is temporarily unavailable. Here are the raw messages:\n\n" + formatWhatsAppSearchResults(whatsappMatches);
+    return "Summarization is temporarily unavailable. Please try again.";
   }
 }
 

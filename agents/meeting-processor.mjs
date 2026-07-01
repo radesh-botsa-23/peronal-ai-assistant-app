@@ -161,10 +161,7 @@ Generate a structured brief (max 500 words):
   try {
     return await generateResponse(prompt);
   } catch {
-    let fallback = `## Meeting Prep: ${participantsOrTopic}\n\n`;
-    if (previousMeetings) fallback += `### Previous Meetings\n${previousMeetings}\n\n`;
-    if (relatedEmails) fallback += `### Related Emails\n${relatedEmails}\n\n`;
-    return fallback;
+    return "Meeting preparation is temporarily unavailable. Please try again.";
   }
 }
 

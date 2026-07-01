@@ -62,7 +62,11 @@ _Transcript URL: ${transcript.transcript_url || "N/A"}_
  * @returns {Promise<{stored: number, skipped: number, failed: number}>}
  */
 export async function ingestMeetings(limit = 20) {
-  const transcripts = await getTranscripts(limit);
+  const ff = await getFirefliesClient();
+  if (!ff) {
+    throw new Error("Fireflies client not initialized. Check your FIREFLIES_API_KEY in config.");
+  }
+  const transcripts = await ff.getTranscripts(limit);
 
   let stored = 0;
   let skipped = 0;
@@ -179,7 +183,7 @@ If some sections have limited info, note that.`;
   try {
     return await generateResponse(prompt);
   } catch {
-    return `## Meeting Prep: ${topic}\n\n${combinedContext}`;
+    return "Meeting preparation is temporarily unavailable. Please try again.";
   }
 }
 

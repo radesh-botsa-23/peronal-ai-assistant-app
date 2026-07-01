@@ -39,9 +39,6 @@ User query/message: "${query}"`;
     if (err.message?.includes("quota") || err.message?.includes("429") || err.message?.includes("limit")) {
       return "⚠️ The assistant is currently experiencing rate limits or quota issues with the Gemini API. Please try again in a moment or check your API key.";
     }
-    if (rawResults && rawResults.trim().length > 0 && query.trim().length > 3) {
-      return `⚠️ I encountered an error generating a natural response, but here is what I found in your database:\n\n${rawResults}`;
-    }
     return "I tried to search my memory but encountered an error. Please try again.";
   }
 }
@@ -72,6 +69,6 @@ export async function prepareMeetingBrief(topic) {
   try {
     return await generateMeetingBrief(topic, combinedContext);
   } catch {
-    return `Meeting brief generation is temporarily unavailable. Here's the raw context found:\n\n${combinedContext}`;
+    return "Meeting brief generation is temporarily unavailable. Please try again.";
   }
 }
