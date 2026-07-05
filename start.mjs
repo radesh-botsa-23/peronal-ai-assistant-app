@@ -126,8 +126,8 @@ try {
       execSync(`pg_ctl -D ${pgDataDir} -l ${pgLogFile} -o "-F -p 5432 -k /tmp" start`, { stdio: "inherit" });
       console.log("🟢 Local PostgreSQL server started on port 5432.");
 
-      // Create database 'gbrain' if not exists
-      execSync(`createdb -p 5432 gbrain || true`, { stdio: "inherit" });
+      // Create database 'gbrain' if not exists, specifying the /tmp socket and user 'node'
+      execSync(`createdb -p 5432 -h /tmp -U node gbrain || true`, { stdio: "inherit" });
     } catch (pgErr) {
       console.warn("⚠️ PostgreSQL start warning/notice:", pgErr.message);
       if (fs.existsSync(pgLogFile)) {
@@ -137,14 +137,14 @@ try {
       }
     }
 
-    // Initialize gbrain using the native PostgreSQL url
+    // Initialize gbrain using the native PostgreSQL url with explicit role 'node'
     const gbrainConfigDir = path.join(homeDir, ".gbrain");
     fs.mkdirSync(gbrainConfigDir, { recursive: true });
     
     const configPath = path.join(gbrainConfigDir, "config.json");
     if (!fs.existsSync(configPath)) {
       console.log("🗄️ Initializing GBrain knowledge base using native PostgreSQL...");
-      execSync("gbrain init --url postgresql://localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
+      execSync("gbrain init --url postgresql://node@localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
       // Set the embedding model to Gemini
       execSync("gbrain config set embedding_model google:gemini-embedding-2", { stdio: "inherit" });
     } else {
@@ -154,7 +154,7 @@ try {
       if (configJson.engine !== "postgres") {
         console.log("🔄 Re-initializing GBrain config to native PostgreSQL...");
         fs.rmSync(configPath, { force: true });
-        execSync("gbrain init --url postgresql://localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
+        execSync("gbrain init --url postgresql://node@localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
         execSync("gbrain config set embedding_model google:gemini-embedding-2", { stdio: "inherit" });
       }
     }
