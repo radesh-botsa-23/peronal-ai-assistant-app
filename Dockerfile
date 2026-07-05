@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
 RUN curl -fsSL https://bun.sh/install | bash -s "bun-v1.3.14"
 ENV PATH="/root/.bun/bin:${PATH}"
 ENV BUN_JSC_useWasmIPInt=false
+ENV BUN_JSC_useJIT=0
+
 
 
 # Clone and install official gbrain globally
