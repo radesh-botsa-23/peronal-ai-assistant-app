@@ -14,20 +14,19 @@ RUN apt-get update && apt-get install -y \
 # Install OpenClaw globally as root
 RUN npm install -g openclaw@latest
 
-# Create a non-root user with UID 1000
-RUN useradd -m -u 1000 user
-ENV HOME=/home/user
-ENV PATH="/home/user/.bun/bin:${PATH}"
+# Configure environment for the pre-existing non-root 'node' user (UID 1000)
+ENV HOME=/home/node
+ENV PATH="/home/node/.bun/bin:${PATH}"
 ENV BUN_JSC_useJIT=0
 
-# Create directories and assign ownership to user 1000
-RUN mkdir -p /usr/src/app /usr/src/gbrain /usr/src/gbrain-seed /home/user/.openclaw /home/user/.gbrain \
-    && chown -R user:user /usr/src /home/user
+# Create directories and assign ownership to node
+RUN mkdir -p /usr/src/app /usr/src/gbrain /usr/src/gbrain-seed /home/node/.openclaw /home/node/.gbrain \
+    && chown -R node:node /usr/src /home/node
 
-# Switch to the non-root user
-USER user
+# Switch to the non-root node user
+USER node
 
-# Install Bun as user
+# Install Bun as node user
 RUN curl -fsSL https://bun.sh/install | bash -s "bun-v1.3.14"
 
 # Clone and install official gbrain
@@ -37,29 +36,29 @@ WORKDIR /usr/src/gbrain
 RUN bun install
 
 # Set up global and local compatibility shell wrappers to run gbrain
-RUN mkdir -p /home/user/.bun/bin
-RUN echo '#!/bin/sh\nexec bun /usr/src/gbrain/src/cli.ts "$@"' > /home/user/.bun/bin/gbrain && chmod +x /home/user/.bun/bin/gbrain
+RUN mkdir -p /home/node/.bun/bin
+RUN echo '#!/bin/sh\nexec bun /usr/src/gbrain/src/cli.ts "$@"' > /home/node/.bun/bin/gbrain && chmod +x /home/node/.bun/bin/gbrain
 
 # Create symlink in /home/radesh/ for backwards compatibility
 USER root
-RUN mkdir -p /home/radesh/.bun/bin && ln -sf /home/user/.bun/bin/gbrain /home/radesh/.bun/bin/gbrain && chown -R user:user /home/radesh
-USER user
+RUN mkdir -p /home/radesh/.bun/bin && ln -sf /home/node/.bun/bin/gbrain /home/radesh/.bun/bin/gbrain && chown -R node:node /home/radesh
+USER node
 
 # Set up the main app directory
 WORKDIR /usr/src/app
 
 # Copy package files and install dependencies
-COPY --chown=user:user package*.json ./
+COPY --chown=node:node package*.json ./
 RUN npm install
 
 # Copy application source code
-COPY --chown=user:user . .
+COPY --chown=node:node . .
 
 # Copy OpenClaw configuration templates to home directory
-COPY --chown=user:user openclaw-config /home/user/.openclaw
+COPY --chown=node:node openclaw-config /home/node/.openclaw
 
 # Copy database seed files
-COPY --chown=user:user gbrain-seed /usr/src/gbrain-seed
+COPY --chown=node:node gbrain-seed /usr/src/gbrain-seed
 
 # Expose ports (Railway web port and OpenClaw Gateway port)
 EXPOSE 3002
