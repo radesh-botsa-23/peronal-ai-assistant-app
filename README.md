@@ -1,4 +1,15 @@
+---
+title: Personal AI Assistant
+emoji: 🎙️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🎙️ Personal AI Assistant for Workplace Productivity
+
 
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](package.json)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](package.json)
