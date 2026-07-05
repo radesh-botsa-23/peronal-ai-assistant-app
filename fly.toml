@@ -1,0 +1,40 @@
+# fly.toml app configuration file for Personal AI Assistant
+
+app = "" # Leave empty or specify, fly launch will override this
+primary_region = "lax"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3002"
+  WHATSAPP_WEBHOOK_PORT = "3002"
+  INGESTION_INTERVAL = "30"
+  DAILY_REPORT_HOUR = "8"
+  DAILY_REPORT_MINUTE = "0"
+
+[mounts]
+  source = "gbrain_data"
+  destination = "/root/.gbrain"
+
+[[services]]
+  internal_port = 3002
+  protocol = "tcp"
+
+  [[services.ports]]
+    force_https = true
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.http_checks]]
+    interval = "10s"
+    grace_period = "10s"
+    method = "get"
+    path = "/health"
+    protocol = "http"
+    timeout = "2s"
+    tls_skip_verify = false
