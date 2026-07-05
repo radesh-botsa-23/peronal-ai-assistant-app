@@ -43,9 +43,11 @@ RUN bun install
 RUN mkdir -p /home/node/.bun/bin
 RUN echo '#!/bin/sh\nexec bun /usr/src/gbrain/src/cli.ts "$@"' > /home/node/.bun/bin/gbrain && chmod +x /home/node/.bun/bin/gbrain
 
-# Create symlink in /home/radesh/ for backwards compatibility
+# Create symlink in /home/radesh/ for backwards compatibility and install pgvector extension
 USER root
-RUN mkdir -p /home/radesh/.bun/bin && ln -sf /home/node/.bun/bin/gbrain /home/radesh/.bun/bin/gbrain && chown -R node:node /home/radesh
+RUN mkdir -p /home/radesh/.bun/bin && ln -sf /home/node/.bun/bin/gbrain /home/radesh/.bun/bin/gbrain && chown -R node:node /home/radesh \
+    && apt-get update && (apt-get install -y postgresql-$(pg_config --version | awk '{print $2}' | cut -d. -f1)-pgvector || apt-get install -y postgresql-15-pgvector || apt-get install -y postgresql-16-pgvector) \
+    && rm -rf /var/lib/apt/lists/*
 USER node
 
 # Set up the main app directory
