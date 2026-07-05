@@ -168,11 +168,16 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// Start the bot
-client.login(config.discord.token).catch((err) => {
-  console.error("Failed to login to Discord:", err.message);
-  console.error("Make sure DISCORD_TOKEN is set in your .env file.");
-  process.exit(1);
-});
+// Start the bot (do NOT call process.exit on failure — other services must keep running)
+async function startDiscord() {
+  try {
+    await client.login(config.discord.token);
+  } catch (err) {
+    console.warn("⚠️ [Discord] Connection failed (non-fatal):", err.message);
+    console.warn("⚠️ [Discord] Bot is disabled. Other services continue running.");
+    console.warn("   This is expected on platforms that block outbound connections (e.g., Hugging Face Spaces).");
+  }
+}
 
 console.log("🤖 Starting Personal AI Assistant...");
+startDiscord();

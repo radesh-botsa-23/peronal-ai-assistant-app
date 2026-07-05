@@ -123,11 +123,22 @@ try {
 
     // Start PostgreSQL on port 5432 and put Unix domain socket in /tmp (writable by node user)
     try {
+      // Remove stale PID file if it exists (can happen after ungraceful container restart)
+      const pidFile = path.join(pgDataDir, "postmaster.pid");
+      if (fs.existsSync(pidFile)) {
+        console.log("🧹 Cleaning up stale PostgreSQL PID file from previous run...");
+        fs.unlinkSync(pidFile);
+      }
+
       execSync(`pg_ctl -D ${pgDataDir} -l ${pgLogFile} -o "-F -p 5432 -k /tmp" start`, { stdio: "inherit" });
       console.log("🟢 Local PostgreSQL server started on port 5432.");
 
       // Create database 'gbrain' if not exists, specifying the /tmp socket and user 'node'
-      execSync(`createdb -p 5432 -h /tmp -U node gbrain || true`, { stdio: "inherit" });
+      try {
+        execSync(`createdb -p 5432 -h /tmp -U node gbrain 2>/dev/null`, { stdio: "ignore" });
+      } catch {
+        // Database already exists — this is fine
+      }
     } catch (pgErr) {
       console.warn("⚠️ PostgreSQL start warning/notice:", pgErr.message);
       if (fs.existsSync(pgLogFile)) {
@@ -233,7 +244,17 @@ async function shutdown() {
     proc.kill("SIGTERM");
   }
   
+  // Stop local PostgreSQL server gracefully (prevents stale PID files on restart)
   if (isDocker) {
+    const pgDataDir = path.join(homeDir, ".postgres-data");
+    try {
+      const { execSync } = await import("child_process");
+      execSync(`pg_ctl -D ${pgDataDir} stop -m fast 2>/dev/null || true`, { stdio: "ignore", timeout: 10000 });
+      console.log("🐘 PostgreSQL server stopped gracefully.");
+    } catch {
+      // Best-effort; container is shutting down anyway
+    }
+
     console.log("💾 Performing final database sync to persistent volume...");
     await syncLocalDbToPersistent();
     console.log("✅ Database saved.");
