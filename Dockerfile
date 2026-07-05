@@ -18,6 +18,8 @@ RUN npm install -g openclaw@latest
 ENV HOME=/home/node
 ENV PATH="/home/node/.bun/bin:${PATH}"
 ENV BUN_JSC_useJIT=0
+ENV BUN_JSC_useWasmIPInt=true
+
 
 # Create directories and assign ownership to node
 RUN mkdir -p /usr/src/app /usr/src/gbrain /usr/src/gbrain-seed /home/node/.openclaw /home/node/.gbrain \
