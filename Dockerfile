@@ -57,8 +57,13 @@ COPY --chown=node:node . .
 # Copy OpenClaw configuration templates to home directory
 COPY --chown=node:node openclaw-config /home/node/.openclaw
 
-# Copy database seed files
-COPY --chown=node:node gbrain-seed /usr/src/gbrain-seed
+# Decode and extract database seed files from base64 zip
+RUN base64 -d /usr/src/app/gbrain-seed.zip.base64 > /tmp/gbrain-seed.zip \
+    && mkdir -p /usr/src/gbrain-seed \
+    && unzip -q /tmp/gbrain-seed.zip -d /usr/src/gbrain-seed \
+    && cp -R /usr/src/app/gbrain-seed/* /usr/src/gbrain-seed/ 2>/dev/null || true \
+    && rm -rf /tmp/gbrain-seed.zip /usr/src/app/gbrain-seed.zip.base64
+
 
 # Expose ports (Railway web port and OpenClaw Gateway port)
 EXPOSE 3002
