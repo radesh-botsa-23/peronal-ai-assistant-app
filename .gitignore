@@ -8,4 +8,6 @@ token.json
 .env
 Personal_Ai_Assistant/
 gbrain-seed/brain.pglite/pg_wal/
+scratch/
+
 
