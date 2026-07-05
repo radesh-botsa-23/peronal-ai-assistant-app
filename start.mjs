@@ -145,8 +145,6 @@ try {
     if (!fs.existsSync(configPath)) {
       console.log("🗄️ Initializing GBrain knowledge base using native PostgreSQL...");
       execSync("gbrain init --url postgresql://node@localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
-      // Set the embedding model to Gemini
-      execSync("gbrain config set embedding_model google:gemini-embedding-2", { stdio: "inherit" });
     } else {
       // If config exists but engine is pglite, overwrite/re-init to use postgres
       const configStr = fs.readFileSync(configPath, "utf8");
@@ -155,17 +153,20 @@ try {
         console.log("🔄 Re-initializing GBrain config to native PostgreSQL...");
         fs.rmSync(configPath, { force: true });
         execSync("gbrain init --url postgresql://node@localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
-        execSync("gbrain config set embedding_model google:gemini-embedding-2", { stdio: "inherit" });
       }
     }
 
-    // Inject Gemini API Key into the config
-    if (process.env.GEMINI_API_KEY && fs.existsSync(configPath)) {
+    // Inject Gemini API Key and embedding model directly into config.json
+    // (gbrain v0.42+ rejects `config set embedding_model` via CLI — it's a schema-level field)
+    if (fs.existsSync(configPath)) {
       const configStr = fs.readFileSync(configPath, "utf8");
       const configJson = JSON.parse(configStr);
-      configJson.google_api_key = process.env.GEMINI_API_KEY;
+      if (process.env.GEMINI_API_KEY) {
+        configJson.google_api_key = process.env.GEMINI_API_KEY;
+      }
+      configJson.embedding_model = "google:gemini-embedding-2";
       fs.writeFileSync(configPath, JSON.stringify(configJson, null, 2), "utf8");
-      console.log("✅ Configured Google API key in gbrain configuration.");
+      console.log("✅ Configured Google API key and embedding model in gbrain config.");
     }
 
     // Run diagnostics
