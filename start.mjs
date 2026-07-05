@@ -198,8 +198,43 @@ try {
       }
       execSync("gbrain doctor", { stdio: "inherit" });
     } catch (docErr) {
-      console.error("❌ gbrain doctor command failed:", docErr.message);
+      console.error("❌ gbrain doctor command failed. Database might be corrupted. Reinitializing clean database...", docErr.message);
+      try {
+        // WIPE local and persistent database directories
+        if (fs.existsSync(localDbDir)) fs.rmSync(localDbDir, { recursive: true, force: true });
+        if (fs.existsSync(persistentDbDir)) fs.rmSync(persistentDbDir, { recursive: true, force: true });
+
+        fs.mkdirSync(localDbDir, { recursive: true });
+        
+        console.log("🗄️ Initializing clean fresh local database...");
+        execSync("gbrain init --pglite", { stdio: "inherit", env: { ...process.env, HOME: "/tmp" } });
+
+        // Update database path inside the new config.json
+        const localConfigPath = path.join(localDbDir, "config.json");
+        if (fs.existsSync(localConfigPath)) {
+          const configStr = fs.readFileSync(localConfigPath, "utf8");
+          const configJson = JSON.parse(configStr);
+          configJson.database_path = "/tmp/.gbrain/brain.pglite";
+          if (process.env.GEMINI_API_KEY) {
+            configJson.google_api_key = process.env.GEMINI_API_KEY;
+          }
+          fs.writeFileSync(localConfigPath, JSON.stringify(configJson, null, 2), "utf8");
+        }
+
+        // Recreate locks
+        const localLocks = path.join(localDbDir, ".locks");
+        fs.mkdirSync(localLocks, { recursive: true });
+        execSync(`chmod -R 777 ${localDbDir}`, { stdio: "ignore" });
+
+        // Sync back to persistent storage
+        await syncLocalDbToPersistent();
+        console.log("✅ Reinitialization complete. Running doctor again...");
+        execSync("gbrain doctor", { stdio: "inherit" });
+      } catch (reinitErr) {
+        console.error("❌ Database reinitialization failed:", reinitErr.message);
+      }
     }
+
 
   }
 } catch (err) {
