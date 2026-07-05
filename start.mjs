@@ -148,8 +148,13 @@ try {
     // Create local writable tmp directory for fast db lock operations
     fs.mkdirSync(localDbDir, { recursive: true });
 
-    console.log("🗄️ Initializing clean fresh local database...");
-    execSync("gbrain init --pglite", { stdio: "inherit", env: { ...process.env, HOME: "/tmp" } });
+    if (fs.existsSync(seedDir)) {
+      console.log("🗄️ Seeding local database from pre-populated seed data...");
+      execSync(`cp -R ${seedDir}/* ${localDbDir}/`, { stdio: "inherit" });
+    } else {
+      console.log("🗄️ Initializing clean fresh local database...");
+      execSync("gbrain init --pglite", { stdio: "inherit", env: { ...process.env, HOME: "/tmp" } });
+    }
 
     // Set config.json database_path to point to /tmp to avoid filesystem locks crashing PGlite
     const localConfigPath = path.join(localDbDir, "config.json");
