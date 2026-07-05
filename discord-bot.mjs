@@ -168,15 +168,44 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// Start the bot (do NOT call process.exit on failure — other services must keep running)
+// Start the bot with timeout and retries (do NOT crash the app on failure)
+const DISCORD_LOGIN_TIMEOUT_MS = 15000;
+const DISCORD_MAX_RETRIES = 3;
+const DISCORD_RETRY_DELAY_MS = 10000;
+
+function loginWithTimeout(token, timeoutMs) {
+  return Promise.race([
+    client.login(token),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Login timed out after ${timeoutMs / 1000}s`)), timeoutMs)
+    ),
+  ]);
+}
+
 async function startDiscord() {
-  try {
-    await client.login(config.discord.token);
-  } catch (err) {
-    console.warn("⚠️ [Discord] Connection failed (non-fatal):", err.message);
-    console.warn("⚠️ [Discord] Bot is disabled. Other services continue running.");
-    console.warn("   This is expected on platforms that block outbound connections (e.g., Hugging Face Spaces).");
+  if (!config.discord.token) {
+    console.warn("⚠️ [Discord] DISCORD_TOKEN not set — bot disabled.");
+    return;
   }
+
+  for (let attempt = 1; attempt <= DISCORD_MAX_RETRIES; attempt++) {
+    console.log(`🔌 [Discord] Connecting... (attempt ${attempt}/${DISCORD_MAX_RETRIES})`);
+    try {
+      await loginWithTimeout(config.discord.token, DISCORD_LOGIN_TIMEOUT_MS);
+      console.log("✅ [Discord] Bot connected successfully!");
+      return; // success — stop retrying
+    } catch (err) {
+      console.warn(`⚠️ [Discord] Attempt ${attempt} failed: ${err.message}`);
+      if (attempt < DISCORD_MAX_RETRIES) {
+        console.log(`   Retrying in ${DISCORD_RETRY_DELAY_MS / 1000}s...`);
+        await new Promise((r) => setTimeout(r, DISCORD_RETRY_DELAY_MS));
+      }
+    }
+  }
+
+  console.warn("⚠️ [Discord] All connection attempts failed. Bot is disabled.");
+  console.warn("   Other services (GBrain, Gmail, OpenClaw, WhatsApp) continue running.");
+  console.warn("   This is expected on Hugging Face Spaces (outbound Discord connections are blocked).");
 }
 
 console.log("🤖 Starting Personal AI Assistant...");
