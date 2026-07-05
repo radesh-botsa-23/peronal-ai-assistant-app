@@ -1,14 +1,14 @@
-gbrain-seed/brain.pglite/base/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/base/*/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/base/*/*/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/global/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/pg_logical/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/pg_multixact/*/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/pg_multixact/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/pg_subtrans/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/pg_xact/* filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/postgresql.conf filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/postgresql.auto.conf filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/pg_hba.conf filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/pg_ident.conf filter=lfs diff=lfs merge=lfs -text
-gbrain-seed/brain.pglite/PG_VERSION filter=lfs diff=lfs merge=lfs -text
+gbrain-seed/brain.pglite/base/* -text
+gbrain-seed/brain.pglite/base/*/* -text
+gbrain-seed/brain.pglite/base/*/*/* -text
+gbrain-seed/brain.pglite/global/* -text
+gbrain-seed/brain.pglite/pg_logical/* -text
+gbrain-seed/brain.pglite/pg_multixact/*/* -text
+gbrain-seed/brain.pglite/pg_multixact/* -text
+gbrain-seed/brain.pglite/pg_subtrans/* -text
+gbrain-seed/brain.pglite/pg_xact/* -text
+gbrain-seed/brain.pglite/postgresql.conf -text
+gbrain-seed/brain.pglite/postgresql.auto.conf -text
+gbrain-seed/brain.pglite/pg_hba.conf -text
+gbrain-seed/brain.pglite/pg_ident.conf -text
+gbrain-seed/brain.pglite/PG_VERSION -text
