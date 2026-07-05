@@ -43,10 +43,22 @@ RUN bun install
 RUN mkdir -p /home/node/.bun/bin
 RUN echo '#!/bin/sh\nexec bun /usr/src/gbrain/src/cli.ts "$@"' > /home/node/.bun/bin/gbrain && chmod +x /home/node/.bun/bin/gbrain
 
-# Create symlink in /home/radesh/ for backwards compatibility and install pgvector extension
+# Create symlink in /home/radesh/ for backwards compatibility
 USER root
-RUN mkdir -p /home/radesh/.bun/bin && ln -sf /home/node/.bun/bin/gbrain /home/radesh/.bun/bin/gbrain && chown -R node:node /home/radesh \
-    && apt-get update && (apt-get install -y postgresql-$(pg_config --version | awk '{print $2}' | cut -d. -f1)-pgvector || apt-get install -y postgresql-15-pgvector || apt-get install -y postgresql-16-pgvector) \
+RUN mkdir -p /home/radesh/.bun/bin && ln -sf /home/node/.bun/bin/gbrain /home/radesh/.bun/bin/gbrain && chown -R node:node /home/radesh
+
+# Build and install pgvector from source (not available as apt package in Debian Bookworm)
+RUN PG_MAJOR=$(pg_config --version | awk '{print $2}' | cut -d. -f1) \
+    && apt-get update \
+    && apt-get install -y postgresql-server-dev-${PG_MAJOR} \
+    && cd /tmp \
+    && git clone --branch v0.8.0 https://github.com/pgvector/pgvector.git \
+    && cd pgvector \
+    && make \
+    && make install \
+    && cd / && rm -rf /tmp/pgvector \
+    && apt-get purge -y postgresql-server-dev-${PG_MAJOR} \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 USER node
 
