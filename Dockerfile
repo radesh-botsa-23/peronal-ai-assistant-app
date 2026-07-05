@@ -57,13 +57,13 @@ COPY --chown=node:node . .
 # Copy OpenClaw configuration templates to home directory
 COPY --chown=node:node openclaw-config /home/node/.openclaw
 
-# Decode and extract database seed files from base64 zip
+# Decode and extract database seed files from base64 zip using Python to override Unix permissions
 RUN base64 -d /usr/src/app/gbrain-seed.zip.base64 > /tmp/gbrain-seed.zip \
     && mkdir -p /usr/src/gbrain-seed \
-    && unzip -q /tmp/gbrain-seed.zip -d /usr/src/gbrain-seed \
-    && chmod -R 755 /usr/src/gbrain-seed \
+    && python3 -c "import zipfile; zf = zipfile.ZipFile('/tmp/gbrain-seed.zip'); [setattr(m, 'external_attr', (0o755 if m.is_dir() else 0o644) << 16) or zf.extract(m, '/usr/src/gbrain-seed') for m in zf.infolist()]" \
     && cp -R /usr/src/app/gbrain-seed/* /usr/src/gbrain-seed/ 2>/dev/null || true \
     && rm -rf /tmp/gbrain-seed.zip /usr/src/app/gbrain-seed.zip.base64
+
 
 
 
