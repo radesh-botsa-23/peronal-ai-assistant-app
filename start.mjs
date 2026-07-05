@@ -189,10 +189,18 @@ try {
     // Run diagnostics to debug the PGlite initialization failure
     console.log("🩺 Running gbrain doctor diagnostics inside container...");
     try {
+      console.log("🩺 [DEBUG] process.env.HOME:", process.env.HOME);
+      console.log("🩺 [DEBUG] os.homedir():", (await import("os")).homedir());
+      console.log("🩺 [DEBUG] localDbDir files:", fs.existsSync(localDbDir) ? fs.readdirSync(localDbDir) : "DOES NOT EXIST");
+      console.log("🩺 [DEBUG] persistentDbDir files:", fs.existsSync(persistentDbDir) ? fs.readdirSync(persistentDbDir) : "DOES NOT EXIST");
+      if (fs.existsSync(path.join(persistentDbDir, "config.json"))) {
+        console.log("🩺 [DEBUG] persistentDbDir config.json content:", fs.readFileSync(path.join(persistentDbDir, "config.json"), "utf8"));
+      }
       execSync("gbrain doctor", { stdio: "inherit" });
     } catch (docErr) {
       console.error("❌ gbrain doctor command failed:", docErr.message);
     }
+
   }
 } catch (err) {
   console.error("⚠️ Failed to initialize/seed GBrain database:", err.message);
