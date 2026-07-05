@@ -101,151 +101,77 @@ try {
   console.error("⚠️ Failed to inject configs into openclaw.json:", err.message);
 }
 
-// Database sync helper for container runs (copy from local fast VFS /tmp to persistent volume /root/.gbrain)
-const localDbDir = "/tmp/.gbrain";
+// Database configuration for container runs (using native local PostgreSQL server instead of WASM-based PGlite)
 const homeDir = process.env.HOME || "/root";
-const persistentDbDir = path.join(homeDir, ".gbrain");
 
-async function syncLocalDbToPersistent() {
-  try {
-    if (fs.existsSync(path.join(localDbDir, "brain.pglite"))) {
-      const { execSync } = await import("child_process");
-      // Recreate directory on persistent volume if missing
-      fs.mkdirSync(persistentDbDir, { recursive: true });
-      
-      // Clean up locks folder from persistent storage to avoid stale locks
-      const persistentLocks = path.join(persistentDbDir, ".locks");
-      if (fs.existsSync(persistentLocks)) {
-        fs.rmSync(persistentLocks, { recursive: true, force: true });
-      }
-
-      // Copy from local fast FS to the persistent volume
-      execSync(`cp -R ${localDbDir}/* ${persistentDbDir}/`, { stdio: "ignore" });
-    }
-  } catch (err) {
-    console.error("⚠️ Database sync failed:", err.message);
-  }
-}
-
-// 3. Auto-initialize, seed, or restore GBrain database locally (bypasses cloud locking issues)
 try {
   if (isDocker) {
-    const seedDir = "/usr/src/gbrain-seed";
     const { execSync } = await import("child_process");
 
-    // WIPE any existing cached databases to start completely fresh and clean
-    if (fs.existsSync(localDbDir)) {
-      fs.rmSync(localDbDir, { recursive: true, force: true });
-    }
-    if (fs.existsSync(persistentDbDir)) {
-      // Clean up files inside persistent storage but keep the mount directory
-      const files = fs.readdirSync(persistentDbDir);
-      for (const file of files) {
-        fs.rmSync(path.join(persistentDbDir, file), { recursive: true, force: true });
-      }
-    }
+    // Start native PostgreSQL database inside Docker
+    const pgDataDir = path.join(homeDir, ".postgres-data");
+    const pgLogFile = "/tmp/postgres.log";
 
-    // Create local writable tmp directory for fast db lock operations
-    fs.mkdirSync(localDbDir, { recursive: true });
-
-    if (fs.existsSync(seedDir)) {
-      console.log("🗄️ Seeding local database from pre-populated seed data...");
-      execSync(`cp -R ${seedDir}/* ${localDbDir}/`, { stdio: "inherit" });
-    } else {
-      console.log("🗄️ Initializing clean fresh local database...");
-      execSync("gbrain init --pglite", { stdio: "inherit", env: { ...process.env, HOME: "/tmp" } });
+    console.log("🗄️ Preparing native local PostgreSQL database...");
+    
+    // Check if postgres cluster is initialized
+    if (!fs.existsSync(path.join(pgDataDir, "PG_VERSION"))) {
+      console.log("🗄️ Initializing native PostgreSQL database cluster...");
+      fs.mkdirSync(pgDataDir, { recursive: true });
+      execSync(`initdb -D ${pgDataDir}`, { stdio: "inherit" });
     }
 
-    // Set config.json database_path to point to /tmp to avoid filesystem locks crashing PGlite
-    const localConfigPath = path.join(localDbDir, "config.json");
-    if (fs.existsSync(localConfigPath)) {
-      const configStr = fs.readFileSync(localConfigPath, "utf8");
-      const configJson = JSON.parse(configStr);
-      configJson.database_path = "/tmp/.gbrain/brain.pglite";
-      
-      // Inject API key if configured
-      if (process.env.GEMINI_API_KEY) {
-        configJson.google_api_key = process.env.GEMINI_API_KEY;
-      }
-      
-      fs.writeFileSync(localConfigPath, JSON.stringify(configJson, null, 2), "utf8");
-      console.log("✅ Configured local database path and API key inside config.json");
-    }
-
-    // Recreate locks folder in local folder to ensure clean launch
-    const localLocks = path.join(localDbDir, ".locks");
-    if (fs.existsSync(localLocks)) {
-      fs.rmSync(localLocks, { recursive: true, force: true });
-    }
-    fs.mkdirSync(localLocks, { recursive: true });
-
-    // Ensure all directories and files are fully readable/writable inside Docker
-    execSync(`chmod -R 777 ${localDbDir}`, { stdio: "ignore" });
-
-    // Copy configurations back to the persistent volume so gbrain CLI can locate them
-    await syncLocalDbToPersistent();
-    console.log("✅ Database preparation complete.");
-
-    // Run diagnostics to debug the PGlite initialization failure
-    console.log("🩺 Running gbrain doctor diagnostics inside container...");
+    // Start PostgreSQL on port 5432
     try {
-      console.log("🩺 [DEBUG] process.env.HOME:", process.env.HOME);
-      console.log("🩺 [DEBUG] os.homedir():", (await import("os")).homedir());
-      console.log("🩺 [DEBUG] localDbDir files:", fs.existsSync(localDbDir) ? fs.readdirSync(localDbDir) : "DOES NOT EXIST");
-      console.log("🩺 [DEBUG] persistentDbDir files:", fs.existsSync(persistentDbDir) ? fs.readdirSync(persistentDbDir) : "DOES NOT EXIST");
-      if (fs.existsSync(path.join(persistentDbDir, "config.json"))) {
-        console.log("🩺 [DEBUG] persistentDbDir config.json content:", fs.readFileSync(path.join(persistentDbDir, "config.json"), "utf8"));
+      execSync(`pg_ctl -D ${pgDataDir} -l ${pgLogFile} -o "-F -p 5432" start`, { stdio: "inherit" });
+      console.log("🟢 Local PostgreSQL server started on port 5432.");
+
+      // Create database 'gbrain' if not exists
+      execSync(`createdb -p 5432 gbrain || true`, { stdio: "inherit" });
+    } catch (pgErr) {
+      console.warn("⚠️ PostgreSQL start warning/notice:", pgErr.message);
+    }
+
+    // Initialize gbrain using the native PostgreSQL url
+    const gbrainConfigDir = path.join(homeDir, ".gbrain");
+    fs.mkdirSync(gbrainConfigDir, { recursive: true });
+    
+    const configPath = path.join(gbrainConfigDir, "config.json");
+    if (!fs.existsSync(configPath)) {
+      console.log("🗄️ Initializing GBrain knowledge base using native PostgreSQL...");
+      execSync("gbrain init --url postgresql://localhost:5432/gbrain", { stdio: "inherit" });
+    } else {
+      // If config exists but engine is pglite, overwrite/re-init to use postgres
+      const configStr = fs.readFileSync(configPath, "utf8");
+      const configJson = JSON.parse(configStr);
+      if (configJson.engine !== "postgres") {
+        console.log("🔄 Re-initializing GBrain config to native PostgreSQL...");
+        fs.rmSync(configPath, { force: true });
+        execSync("gbrain init --url postgresql://localhost:5432/gbrain", { stdio: "inherit" });
       }
+    }
+
+    // Inject Gemini API Key into the config
+    if (process.env.GEMINI_API_KEY && fs.existsSync(configPath)) {
+      const configStr = fs.readFileSync(configPath, "utf8");
+      const configJson = JSON.parse(configStr);
+      configJson.google_api_key = process.env.GEMINI_API_KEY;
+      fs.writeFileSync(configPath, JSON.stringify(configJson, null, 2), "utf8");
+      console.log("✅ Configured Google API key in gbrain configuration.");
+    }
+
+    // Run diagnostics
+    console.log("🩺 Running gbrain doctor diagnostics...");
+    try {
       execSync("gbrain doctor", { stdio: "inherit" });
     } catch (docErr) {
-      console.error("❌ gbrain doctor command failed. Database might be corrupted. Reinitializing clean database...", docErr.message);
-      try {
-        // WIPE local and persistent database directories
-        if (fs.existsSync(localDbDir)) fs.rmSync(localDbDir, { recursive: true, force: true });
-        if (fs.existsSync(persistentDbDir)) fs.rmSync(persistentDbDir, { recursive: true, force: true });
-
-        fs.mkdirSync(localDbDir, { recursive: true });
-        
-        console.log("🗄️ Initializing clean fresh local database...");
-        execSync("gbrain init --pglite", { stdio: "inherit", env: { ...process.env, HOME: "/tmp" } });
-
-        // Update database path inside the new config.json
-        const localConfigPath = path.join(localDbDir, "config.json");
-        if (fs.existsSync(localConfigPath)) {
-          const configStr = fs.readFileSync(localConfigPath, "utf8");
-          const configJson = JSON.parse(configStr);
-          configJson.database_path = "/tmp/.gbrain/brain.pglite";
-          if (process.env.GEMINI_API_KEY) {
-            configJson.google_api_key = process.env.GEMINI_API_KEY;
-          }
-          fs.writeFileSync(localConfigPath, JSON.stringify(configJson, null, 2), "utf8");
-        }
-
-        // Recreate locks
-        const localLocks = path.join(localDbDir, ".locks");
-        fs.mkdirSync(localLocks, { recursive: true });
-        execSync(`chmod -R 777 ${localDbDir}`, { stdio: "ignore" });
-
-        // Sync back to persistent storage
-        await syncLocalDbToPersistent();
-        console.log("✅ Reinitialization complete. Running doctor again...");
-        execSync("gbrain doctor", { stdio: "inherit" });
-      } catch (reinitErr) {
-        console.error("❌ Database reinitialization failed:", reinitErr.message);
-      }
+      console.error("❌ gbrain doctor failed:", docErr.message);
     }
-
-
   }
 } catch (err) {
-  console.error("⚠️ Failed to initialize/seed GBrain database:", err.message);
+  console.error("⚠️ Failed to initialize local PostgreSQL/GBrain:", err.message);
 }
 
-// 4. Start background database sync every 1 minute
-if (isDocker) {
-  setInterval(syncLocalDbToPersistent, 60000);
-  console.log("🔄 Background database sync scheduled (every 60s).");
-}
 
 console.log("🚀 Personal AI Assistant — Starting services...\n");
 

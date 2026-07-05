@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    postgresql \
+    postgresql-contrib \
     && rm -rf /var/lib/apt/lists/*
 
 # Install OpenClaw globally as root
@@ -16,7 +18,7 @@ RUN npm install -g openclaw@latest
 
 # Configure environment for the pre-existing non-root 'node' user (UID 1000)
 ENV HOME=/home/node
-ENV PATH="/home/node/.bun/bin:${PATH}"
+ENV PATH="/home/node/.bun/bin:/usr/lib/postgresql/17/bin:/usr/lib/postgresql/16/bin:/usr/lib/postgresql/15/bin:${PATH}"
 ENV BUN_JSC_useJIT=0
 ENV BUN_JSC_useWasmIPInt=true
 
