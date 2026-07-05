@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
 # Install Bun v1.3.14 (matches local working WSL environment)
 RUN curl -fsSL https://bun.sh/install | bash -s "bun-v1.3.14"
 ENV PATH="/root/.bun/bin:${PATH}"
+ENV BUN_JSC_useWasmIPInt=false
+
 
 # Clone and install official gbrain globally
 WORKDIR /usr/src
