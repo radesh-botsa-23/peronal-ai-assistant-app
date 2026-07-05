@@ -28,7 +28,7 @@ if (process.env.GMAIL_TOKEN_JSON && !fs.existsSync(path.join(__dirname, "token.j
   console.log("📝 Created token.json from GMAIL_TOKEN_JSON environment variable.");
 }
 
-const isDocker = fs.existsSync("/.dockerenv") || process.env.RAILWAY_ENVIRONMENT !== undefined;
+const isDocker = fs.existsSync("/.dockerenv") || process.env.RAILWAY_ENVIRONMENT !== undefined || process.env.SPACE_ID !== undefined || __dirname.startsWith("/usr/src/app");
 
 // 2. OpenClaw config injection (inject Railway environment variables into openclaw.json when in Docker)
 try {
