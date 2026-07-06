@@ -3,11 +3,11 @@
     "defaults": {
       "model": {
         "fallbacks": [],
-        "primary": "google/gemini-2.0-flash"
+        "primary": "google/gemini-flash-lite-latest"
       },
       "models": {
         "ollama/gemma3:4b": {},
-        "google/gemini-2.0-flash": {}
+        "google/gemini-flash-lite-latest": {}
       },
       "workspace": "/home/radesh/.openclaw/workspace"
     }
