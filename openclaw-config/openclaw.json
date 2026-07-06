@@ -27,7 +27,7 @@
   "channels": {
     "telegram": {
       "botToken": "YOUR_TELEGRAM_BOT_TOKEN",
-      "enabled": false,
+      "enabled": true,
       "groups": {
         "*": {
           "requireMention": true
@@ -298,6 +298,13 @@
       "agentId": "main",
       "match": {
         "channel": "discord",
+        "accountId": "default"
+      }
+    },
+    {
+      "agentId": "main",
+      "match": {
+        "channel": "telegram",
         "accountId": "default"
       }
     }
