@@ -75,12 +75,16 @@ COPY --chown=node:node . .
 # Copy OpenClaw configuration templates to home directory
 COPY --chown=node:node openclaw-config /home/node/.openclaw
 
-# Decode and extract database seed files from base64 zip using Python to normalize backslashes and set Unix permissions
-RUN base64 -d /usr/src/app/gbrain-seed.zip.base64 > /tmp/gbrain-seed.zip \
-    && mkdir -p /usr/src/gbrain-seed \
-    && python3 /usr/src/app/scripts/extract-seed.py \
-    && cp -R /usr/src/app/gbrain-seed/* /usr/src/gbrain-seed/ 2>/dev/null || true \
-    && rm -rf /tmp/gbrain-seed.zip /usr/src/app/gbrain-seed.zip.base64
+# Decode and extract database seed files (optional — skipped if seed file not in repo)
+RUN if [ -f /usr/src/app/gbrain-seed.zip.base64 ]; then \
+      base64 -d /usr/src/app/gbrain-seed.zip.base64 > /tmp/gbrain-seed.zip \
+      && mkdir -p /usr/src/gbrain-seed \
+      && python3 /usr/src/app/scripts/extract-seed.py \
+      && cp -R /usr/src/app/gbrain-seed/* /usr/src/gbrain-seed/ 2>/dev/null || true \
+      && rm -rf /tmp/gbrain-seed.zip /usr/src/app/gbrain-seed.zip.base64; \
+    else \
+      echo "No seed file found — GBrain will initialize a fresh database at runtime."; \
+    fi
 
 
 
