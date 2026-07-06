@@ -107,63 +107,83 @@ const homeDir = process.env.HOME || "/root";
 try {
   if (isDocker) {
     const { execSync } = await import("child_process");
-
-    // Start native PostgreSQL database inside Docker
-    const pgDataDir = path.join(homeDir, ".postgres-data");
-    const pgLogFile = "/tmp/postgres.log";
-
-    console.log("🗄️ Preparing native local PostgreSQL database...");
-    
-    // Check if postgres cluster is initialized
-    if (!fs.existsSync(path.join(pgDataDir, "PG_VERSION"))) {
-      console.log("🗄️ Initializing native PostgreSQL database cluster...");
-      fs.mkdirSync(pgDataDir, { recursive: true });
-      execSync(`initdb -D ${pgDataDir}`, { stdio: "inherit" });
-    }
-
-    // Start PostgreSQL on port 5432 and put Unix domain socket in /tmp (writable by node user)
-    try {
-      // Remove stale PID file if it exists (can happen after ungraceful container restart)
-      const pidFile = path.join(pgDataDir, "postmaster.pid");
-      if (fs.existsSync(pidFile)) {
-        console.log("🧹 Cleaning up stale PostgreSQL PID file from previous run...");
-        fs.unlinkSync(pidFile);
-      }
-
-      execSync(`pg_ctl -D ${pgDataDir} -l ${pgLogFile} -o "-F -p 5432 -k /tmp" start`, { stdio: "inherit" });
-      console.log("🟢 Local PostgreSQL server started on port 5432.");
-
-      // Create database 'gbrain' if not exists, specifying the /tmp socket and user 'node'
-      try {
-        execSync(`createdb -p 5432 -h /tmp -U node gbrain 2>/dev/null`, { stdio: "ignore" });
-      } catch {
-        // Database already exists — this is fine
-      }
-    } catch (pgErr) {
-      console.warn("⚠️ PostgreSQL start warning/notice:", pgErr.message);
-      if (fs.existsSync(pgLogFile)) {
-        console.log("📄 --- PostgreSQL Log Output ---");
-        console.log(fs.readFileSync(pgLogFile, "utf8"));
-        console.log("--------------------------------");
-      }
-    }
-
-    // Initialize gbrain using the native PostgreSQL url with explicit role 'node'
     const gbrainConfigDir = path.join(homeDir, ".gbrain");
     fs.mkdirSync(gbrainConfigDir, { recursive: true });
-    
     const configPath = path.join(gbrainConfigDir, "config.json");
-    if (!fs.existsSync(configPath)) {
-      console.log("🗄️ Initializing GBrain knowledge base using native PostgreSQL...");
-      execSync("gbrain init --url postgresql://node@localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
+
+    if (process.env.DATABASE_URL) {
+      console.log("🗄️ DATABASE_URL detected. Configuring GBrain to use external PostgreSQL...");
+      let needsInit = true;
+      if (fs.existsSync(configPath)) {
+        try {
+          const configStr = fs.readFileSync(configPath, "utf8");
+          const configJson = JSON.parse(configStr);
+          if (configJson.engine === "postgres" && configJson.url === process.env.DATABASE_URL) {
+            needsInit = false;
+          } else {
+            console.log("🔄 Database URL changed. Re-initializing GBrain config...");
+            fs.rmSync(configPath, { force: true });
+          }
+        } catch {
+          fs.rmSync(configPath, { force: true });
+        }
+      }
+      if (needsInit) {
+        execSync(`gbrain init --url "${process.env.DATABASE_URL}" --no-embedding`, { stdio: "inherit" });
+      }
     } else {
-      // If config exists but engine is pglite, overwrite/re-init to use postgres
-      const configStr = fs.readFileSync(configPath, "utf8");
-      const configJson = JSON.parse(configStr);
-      if (configJson.engine !== "postgres") {
-        console.log("🔄 Re-initializing GBrain config to native PostgreSQL...");
-        fs.rmSync(configPath, { force: true });
+      // Start native PostgreSQL database inside Docker
+      const pgDataDir = path.join(homeDir, ".postgres-data");
+      const pgLogFile = "/tmp/postgres.log";
+
+      console.log("🗄️ Preparing native local PostgreSQL database...");
+      
+      // Check if postgres cluster is initialized
+      if (!fs.existsSync(path.join(pgDataDir, "PG_VERSION"))) {
+        console.log("🗄️ Initializing native PostgreSQL database cluster...");
+        fs.mkdirSync(pgDataDir, { recursive: true });
+        execSync(`initdb -D ${pgDataDir}`, { stdio: "inherit" });
+      }
+
+      // Start PostgreSQL on port 5432 and put Unix domain socket in /tmp (writable by node user)
+      try {
+        // Remove stale PID file if it exists (can happen after ungraceful container restart)
+        const pidFile = path.join(pgDataDir, "postmaster.pid");
+        if (fs.existsSync(pidFile)) {
+          console.log("🧹 Cleaning up stale PostgreSQL PID file from previous run...");
+          fs.unlinkSync(pidFile);
+        }
+
+        execSync(`pg_ctl -D ${pgDataDir} -l ${pgLogFile} -o "-F -p 5432 -k /tmp" start`, { stdio: "inherit" });
+        console.log("🟢 Local PostgreSQL server started on port 5432.");
+
+        // Create database 'gbrain' if not exists, specifying the /tmp socket and user 'node'
+        try {
+          execSync(`createdb -p 5432 -h /tmp -U node gbrain 2>/dev/null`, { stdio: "ignore" });
+        } catch {
+          // Database already exists — this is fine
+        }
+      } catch (pgErr) {
+        console.warn("⚠️ PostgreSQL start warning/notice:", pgErr.message);
+        if (fs.existsSync(pgLogFile)) {
+          console.log("📄 --- PostgreSQL Log Output ---");
+          console.log(fs.readFileSync(pgLogFile, "utf8"));
+          console.log("--------------------------------");
+        }
+      }
+
+      if (!fs.existsSync(configPath)) {
+        console.log("🗄️ Initializing GBrain knowledge base using native PostgreSQL...");
         execSync("gbrain init --url postgresql://node@localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
+      } else {
+        // If config exists but engine is pglite, overwrite/re-init to use postgres
+        const configStr = fs.readFileSync(configPath, "utf8");
+        const configJson = JSON.parse(configStr);
+        if (configJson.engine !== "postgres") {
+          console.log("🔄 Re-initializing GBrain config to native PostgreSQL...");
+          fs.rmSync(configPath, { force: true });
+          execSync("gbrain init --url postgresql://node@localhost:5432/gbrain --no-embedding", { stdio: "inherit" });
+        }
       }
     }
 
@@ -245,7 +265,7 @@ async function shutdown() {
   }
   
   // Stop local PostgreSQL server gracefully (prevents stale PID files on restart)
-  if (isDocker) {
+  if (isDocker && !process.env.DATABASE_URL) {
     const pgDataDir = path.join(homeDir, ".postgres-data");
     try {
       const { execSync } = await import("child_process");
