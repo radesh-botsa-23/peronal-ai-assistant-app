@@ -1,4 +1,4 @@
-import { queryGBrain, storeDocument } from "../lib/gbrain-client.mjs";
+import { queryGBrain, storeDocument, parseGbrainResults } from "../lib/gbrain-client.mjs";
 import { generateResponse } from "../lib/gemini-client.mjs";
 import { config } from "../config.mjs";
 
@@ -116,9 +116,69 @@ export async function getRecentMeetings(limit = 5) {
   // Fallback: search GBrain for stored meetings
   const gbrainResults = queryGBrain("meeting summary participants");
   if (gbrainResults && gbrainResults.trim().length > 0) {
-    return `## 📋 Stored Meeting Summaries\n\n${gbrainResults}`;
+    const allMatches = parseGbrainResults(gbrainResults);
+    const meetingMatches = allMatches.filter(m => m.slug.startsWith("meeting-"));
+    if (meetingMatches.length > 0) {
+      return `## 📋 Stored Meeting Summaries\n\n${formatMeetingSearchResults(meetingMatches)}`;
+    }
   }
   return "No meetings found. Upload a meeting recording or configure Fireflies API key.";
+}
+
+/**
+ * Format raw GBrain results into a beautiful and readable meeting summary.
+ */
+function formatMeetingSearchResults(matches) {
+  return matches.slice(0, 5).map((m, i) => {
+    const titleHeader = m.header.split(" -- ")[1] || "";
+    const title = titleHeader.replace("# Meeting: ", "").replace("# Meeting:", "").trim();
+    
+    // Find fields in bodyLines
+    const dateLine = m.bodyLines.find(l => l.toLowerCase().includes("**date:**")) || "";
+    const platformLine = m.bodyLines.find(l => l.toLowerCase().includes("**platform:**")) || "";
+    const participantsLine = m.bodyLines.find(l => l.toLowerCase().includes("**participants:**")) || "";
+    const durationLine = m.bodyLines.find(l => l.toLowerCase().includes("**duration:**")) || "";
+
+    // Extract Summary text
+    const summaryHeaderIndex = m.bodyLines.findIndex(l => l.trim().startsWith("## Summary"));
+    let summaryText = "";
+    if (summaryHeaderIndex !== -1) {
+      const summaryLines = [];
+      for (let j = summaryHeaderIndex + 1; j < m.bodyLines.length; j++) {
+        const line = m.bodyLines[j].trim();
+        if (line.startsWith("#")) break; // Next section starts
+        if (line) summaryLines.push(line);
+      }
+      summaryText = summaryLines.join("\n");
+    }
+
+    // Extract Action Items
+    const actionItemsIndex = m.bodyLines.findIndex(l => l.trim().startsWith("## Action Items"));
+    let actionItemsText = "";
+    if (actionItemsIndex !== -1) {
+      const actionLines = [];
+      for (let j = actionItemsIndex + 1; j < m.bodyLines.length; j++) {
+        const line = m.bodyLines[j].trim();
+        if (line.startsWith("#")) break; // Next section starts
+        if (line) actionLines.push(line);
+      }
+      actionItemsText = actionLines.join("\n");
+    }
+
+    let result = `📅 **Meeting ${i + 1}: ${title || "Untitled Meeting"}**\n`;
+    if (dateLine) result += `• ${dateLine.trim()}\n`;
+    if (durationLine) result += `• ${durationLine.trim()}\n`;
+    if (platformLine) result += `• ${platformLine.trim()}\n`;
+    if (participantsLine) result += `• ${participantsLine.trim()}\n`;
+    
+    if (summaryText) {
+      result += `\n**Summary:**\n${summaryText.substring(0, 300)}${summaryText.length > 300 ? "..." : ""}\n`;
+    }
+    if (actionItemsText && actionItemsText.toLowerCase() !== "none identified" && actionItemsText.toLowerCase() !== "none") {
+      result += `\n**Action Items:**\n${actionItemsText}\n`;
+    }
+    return result;
+  }).join("\n\n───────────────────\n\n");
 }
 
 /**
@@ -133,7 +193,14 @@ export async function searchMeetings(topic) {
     return `No meetings found about "${topic}".`;
   }
 
-  return results;
+  const allMatches = parseGbrainResults(results);
+  const meetingMatches = allMatches.filter(m => m.slug.startsWith("meeting-"));
+
+  if (meetingMatches.length === 0) {
+    return `No meetings found about "${topic}".`;
+  }
+
+  return `## 🔍 Meeting Search Results for "${topic}"\n\n${formatMeetingSearchResults(meetingMatches)}`;
 }
 
 /**
@@ -219,7 +286,11 @@ export async function getTodaysMeetingSummaries() {
   const today = new Date().toISOString().split("T")[0];
   const results = queryGBrain(`meeting ${today}`);
   if (results && results.trim().length > 0) {
-    return `## Today's Meetings (from memory)\n\n${results}`;
+    const allMatches = parseGbrainResults(results);
+    const meetingMatches = allMatches.filter(m => m.slug.startsWith("meeting-"));
+    if (meetingMatches.length > 0) {
+      return `## Today's Meetings (from memory)\n\n${formatMeetingSearchResults(meetingMatches)}`;
+    }
   }
   return "No meeting recordings found for today.";
 }
