@@ -229,3 +229,24 @@ setInterval(async () => {
   await runCalendarIngestion();
 }, intervalMs);
 
+// Schedule daily productivity report (automated at dailyReport hour & minute)
+let lastReportDate = "";
+console.log(`Scheduling daily report to check every minute for target time ${config.dailyReport.hour}:${config.dailyReport.minute.toString().padStart(2, '0')}.`);
+setInterval(async () => {
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0]; // "YYYY-MM-DD"
+  
+  if (
+    now.getHours() === config.dailyReport.hour &&
+    now.getMinutes() === config.dailyReport.minute &&
+    lastReportDate !== todayStr
+  ) {
+    lastReportDate = todayStr;
+    console.log(`[${now.toISOString()}] Triggering scheduled daily report...`);
+    try {
+      execSync("node scripts/daily-report-cron.mjs", { cwd: __dirname, stdio: "inherit" });
+    } catch (err) {
+      console.error(`[${now.toISOString()}] Failed to run daily report:`, err.message);
+    }
+  }
+}, 60000); // Check every minute
