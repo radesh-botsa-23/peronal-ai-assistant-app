@@ -215,6 +215,14 @@ try {
     } catch (injectErr) {
       console.error("❌ Failed to inject project review meeting:", injectErr.message);
     }
+
+    // Auto-inject final review & submission meeting
+    try {
+      console.log("🤖 Injecting final review & submission meeting...");
+      execSync("node scripts/inject-final-review-meeting.mjs", { stdio: "inherit" });
+    } catch (injectErr) {
+      console.error("❌ Failed to inject final review meeting:", injectErr.message);
+    }
   }
 } catch (err) {
   console.error("⚠️ Failed to initialize local PostgreSQL/GBrain:", err.message);
