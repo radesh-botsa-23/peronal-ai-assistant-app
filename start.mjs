@@ -207,6 +207,14 @@ try {
     } catch (docErr) {
       console.error("❌ gbrain doctor failed:", docErr.message);
     }
+
+    // Auto-inject project review meeting
+    try {
+      console.log("🤖 Injecting project status review meeting...");
+      execSync("node scripts/inject-meeting-review.mjs", { stdio: "inherit" });
+    } catch (injectErr) {
+      console.error("❌ Failed to inject project review meeting:", injectErr.message);
+    }
   }
 } catch (err) {
   console.error("⚠️ Failed to initialize local PostgreSQL/GBrain:", err.message);
