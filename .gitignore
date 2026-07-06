@@ -1,15 +1,21 @@
+# Dependencies
 node_modules/
-data/
-cron.log
 
+# Secret credentials & tokens
+.env
 credentials.json
 token.json
 
-.env
-Personal_Ai_Assistant/
-gbrain-seed/brain.pglite/
+# Personal data (contains your emails/meetings)
+data/
+gbrain-seed/
 gbrain-seed.zip
+gbrain-seed.zip.base64
+cron.log
+
+# Debug & scratch files
+debug-discord.txt
 scratch/
 
-
-
+# Other
+Personal_Ai_Assistant/

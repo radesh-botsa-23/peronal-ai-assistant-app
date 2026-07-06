@@ -1,2 +1,0 @@
-{"migration":"0.14.0","ts":"2026-06-16T20:37:02.692Z","skill":"skills/migrations/v0.14.0.md","reason":"shell-jobs adoption + autopilot cooperative wiring"}
-{"migration":"0.28.0","ts":"2026-06-16T20:37:06.091Z","skill":"skills/migrations/v0.28.0.md","reason":"Pages with pre-v0.28 chunks still contain fenced takes content. Re-chunk so the new chunker strip rule is applied (Codex P0 #3 fix).","command":"gbrain extract takes --rebuild  # forces re-chunk via reimport pipeline; see migration doc for the precise sweep command in your env","_key":"rechunk-pages-with-takes"}

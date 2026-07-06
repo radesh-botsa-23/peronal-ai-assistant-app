@@ -1,3 +1,0 @@
-Starting bot at 2026-07-02T10:36:12.847Z...
-Token length: 72
-✅ Login succeeded at 2026-07-02T10:36:15.117Z!
