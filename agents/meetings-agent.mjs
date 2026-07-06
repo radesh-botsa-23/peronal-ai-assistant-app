@@ -1,4 +1,4 @@
-import { queryGBrain, storeDocument, parseGbrainResults } from "../lib/gbrain-client.mjs";
+import { queryGBrain, storeDocument, parseGbrainResults, runGbrain } from "../lib/gbrain-client.mjs";
 import { generateResponse } from "../lib/gemini-client.mjs";
 import { config } from "../config.mjs";
 
@@ -129,23 +129,43 @@ export async function getRecentMeetings(limit = 5) {
  * Format raw GBrain results into a beautiful and readable meeting summary.
  */
 function formatMeetingSearchResults(matches) {
-  return matches.slice(0, 5).map((m, i) => {
-    const titleHeader = m.header.split(" -- ")[1] || "";
-    const title = titleHeader.replace("# Meeting: ", "").replace("# Meeting:", "").trim();
+  // Deduplicate matches by slug to avoid querying/displaying the same meeting multiple times
+  const uniqueSlugs = new Set();
+  const uniqueMatches = [];
+  for (const m of matches) {
+    if (!uniqueSlugs.has(m.slug)) {
+      uniqueSlugs.add(m.slug);
+      uniqueMatches.push(m);
+    }
+  }
+
+  return uniqueMatches.slice(0, 3).map((m, i) => {
+    let docContent = "";
+    try {
+      docContent = runGbrain(`get ${m.slug}`);
+    } catch (err) {
+      console.warn(`Failed to fetch full document for ${m.slug}:`, err.message);
+      docContent = m.bodyLines.join("\n");
+    }
+
+    const lines = docContent.split("\n");
+
+    const titleHeader = lines.find(l => l.trim().startsWith("# Meeting:"));
+    const title = titleHeader ? titleHeader.replace("# Meeting: ", "").replace("# Meeting:", "").trim() : "";
     
-    // Find fields in bodyLines
-    const dateLine = m.bodyLines.find(l => l.toLowerCase().includes("**date:**")) || "";
-    const platformLine = m.bodyLines.find(l => l.toLowerCase().includes("**platform:**")) || "";
-    const participantsLine = m.bodyLines.find(l => l.toLowerCase().includes("**participants:**")) || "";
-    const durationLine = m.bodyLines.find(l => l.toLowerCase().includes("**duration:**")) || "";
+    // Find fields in lines
+    const dateLine = lines.find(l => l.toLowerCase().includes("**date:**")) || "";
+    const platformLine = lines.find(l => l.toLowerCase().includes("**platform:**")) || "";
+    const participantsLine = lines.find(l => l.toLowerCase().includes("**participants:**")) || "";
+    const durationLine = lines.find(l => l.toLowerCase().includes("**duration:**")) || "";
 
     // Extract Summary text
-    const summaryHeaderIndex = m.bodyLines.findIndex(l => l.trim().startsWith("## Summary"));
+    const summaryHeaderIndex = lines.findIndex(l => l.trim().startsWith("## Summary"));
     let summaryText = "";
     if (summaryHeaderIndex !== -1) {
       const summaryLines = [];
-      for (let j = summaryHeaderIndex + 1; j < m.bodyLines.length; j++) {
-        const line = m.bodyLines[j].trim();
+      for (let j = summaryHeaderIndex + 1; j < lines.length; j++) {
+        const line = lines[j].trim();
         if (line.startsWith("#")) break; // Next section starts
         if (line) summaryLines.push(line);
       }
@@ -153,12 +173,12 @@ function formatMeetingSearchResults(matches) {
     }
 
     // Extract Action Items
-    const actionItemsIndex = m.bodyLines.findIndex(l => l.trim().startsWith("## Action Items"));
+    const actionItemsIndex = lines.findIndex(l => l.trim().startsWith("## Action Items"));
     let actionItemsText = "";
     if (actionItemsIndex !== -1) {
       const actionLines = [];
-      for (let j = actionItemsIndex + 1; j < m.bodyLines.length; j++) {
-        const line = m.bodyLines[j].trim();
+      for (let j = actionItemsIndex + 1; j < lines.length; j++) {
+        const line = lines[j].trim();
         if (line.startsWith("#")) break; // Next section starts
         if (line) actionLines.push(line);
       }
