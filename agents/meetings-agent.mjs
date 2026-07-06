@@ -203,14 +203,13 @@ export async function getTodaysMeetingSummaries() {
         startOfDay.toISOString(),
         endOfDay.toISOString()
       );
-      if (transcripts.length === 0) {
-        return "No meetings recorded today in Fireflies.";
+      if (transcripts.length > 0) {
+        let result = "## Today's Meeting Summaries\n\n";
+        for (const t of transcripts) {
+          result += ff.formatTranscript(t) + "\n---\n\n";
+        }
+        return result;
       }
-      let result = "## Today's Meeting Summaries\n\n";
-      for (const t of transcripts) {
-        result += ff.formatTranscript(t) + "\n---\n\n";
-      }
-      return result;
     } catch (err) {
       console.warn("Fireflies today's meetings failed:", err.message);
     }
