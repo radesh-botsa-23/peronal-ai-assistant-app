@@ -1,11 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 import { fetchEmails } from "./lib/gmail-client.mjs";
 import { storeEmail, storeCalendarEvent } from "./lib/gbrain-client.mjs";
 import { getTodaysEvents, getUpcomingEvents } from "./lib/calendar-client.mjs";
 import { config } from "./config.mjs";
 import { hasAlertBeenSent, markAlertAsSent, setSessionState } from "./lib/session-state.mjs";
+
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -75,6 +77,17 @@ async function runIngestion() {
   const dataDir = path.join(__dirname, "data", "messages");
   fs.mkdirSync(dataDir, { recursive: true });
   fs.writeFileSync(path.join(dataDir, `${today}.json`), JSON.stringify(emails, null, 2));
+
+  // Generate and send email digest (30mins summary)
+  try {
+    console.log(`[${new Date().toISOString()}] Generating 30-minute email digest...`);
+    execSync("node digest.mjs", { cwd: __dirname, stdio: "inherit" });
+    
+    console.log(`[${new Date().toISOString()}] Sending 30-minute email digest to Discord...`);
+    execSync("node send-discord.mjs", { cwd: __dirname, stdio: "inherit" });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Failed to generate or send 30-minute email digest:`, err.message);
+  }
 }
 
 /**
