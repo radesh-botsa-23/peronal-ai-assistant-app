@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: personal-ai-assistant
+    restart: always
+    ports:
+      - "3002:3002"       # WhatsApp Webhook / App port
+      - "18789:18789"     # OpenClaw Gateway port
+    volumes:
+      - pgdata:/home/node/.postgres-data
+      - gbraindata:/home/node/.gbrain
+      - openclaw_workspace:/home/node/.openclaw/workspace
+    env_file:
+      - .env
+
+volumes:
+  pgdata:
+  gbraindata:
+  openclaw_workspace:

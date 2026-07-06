@@ -255,9 +255,6 @@ async function shutdown() {
       // Best-effort; container is shutting down anyway
     }
 
-    console.log("💾 Performing final database sync to persistent volume...");
-    await syncLocalDbToPersistent();
-    console.log("✅ Database saved.");
   }
   
   process.exit(0);
