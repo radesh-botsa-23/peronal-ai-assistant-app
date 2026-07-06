@@ -28,9 +28,10 @@
     "telegram": {
       "botToken": "YOUR_TELEGRAM_BOT_TOKEN",
       "enabled": true,
+      "groupPolicy": "open",
       "groups": {
         "*": {
-          "requireMention": true
+          "requireMention": false
         }
       }
     },
