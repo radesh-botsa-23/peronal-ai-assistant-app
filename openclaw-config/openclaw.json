@@ -28,6 +28,10 @@
     "telegram": {
       "botToken": "YOUR_TELEGRAM_BOT_TOKEN",
       "enabled": true,
+      "dmPolicy": "allowlist",
+      "allowFrom": [
+        8843232721
+      ],
       "groupPolicy": "open",
       "groups": {
         "*": {
