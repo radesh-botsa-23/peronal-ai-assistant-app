@@ -30,7 +30,8 @@
       "enabled": true,
       "dmPolicy": "allowlist",
       "allowFrom": [
-        8843232721
+        8843232721,
+        1189531256
       ],
       "groupPolicy": "open",
       "groups": {
@@ -48,7 +49,8 @@
   },
   "commands": {
     "ownerAllowFrom": [
-      "telegram:8843232721"
+      "telegram:8843232721",
+      "telegram:1189531256"
     ]
   },
   "gateway": {
