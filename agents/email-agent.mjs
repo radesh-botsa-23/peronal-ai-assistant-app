@@ -1,5 +1,6 @@
 import { queryGBrain, parseGbrainResults } from "../lib/gbrain-client.mjs";
 import { summarizeEmails } from "../lib/gemini-client.mjs";
+import { sendEmailReply, createGmailClient } from "../lib/gmail-client.mjs";
 
 /**
  * Email Agent - Searches email memory, filters relevant emails, extracts action items.
@@ -148,4 +149,62 @@ function formatEmailSearchResults(matches) {
     if (snippet) result += `• **Snippet:** ${snippet}...`;
     return result;
   }).join("\n\n");
+}
+
+/**
+ * Reply to the most recent email from a specific sender.
+ * @param {string} senderName - Name of the sender
+ * @param {string} replyText - The reply content
+ * @returns {Promise<string>} Confirmation or error message
+ */
+export async function replyToLastEmail(senderName, replyText) {
+  if (!senderName) {
+    return "Please specify who you want to reply to (e.g. Sameer).";
+  }
+
+  if (!replyText || replyText.trim().length === 0) {
+    return "Please specify the message you want to reply with.";
+  }
+
+  // 1. Search GBrain for emails from senderName
+  const searchQuery = `from ${senderName}`;
+  const rawResults = queryGBrain(searchQuery);
+
+  if (!rawResults || rawResults.trim().length === 0) {
+    return `No previous emails from "${senderName}" found in memory.`;
+  }
+
+  const matches = parseGbrainResults(rawResults);
+  const emailMatches = matches.filter((m) => m.slug.startsWith("email-"));
+
+  if (emailMatches.length === 0) {
+    return `No emails found from "${senderName}" in your database.`;
+  }
+
+  // Get the most recent email match
+  const targetEmail = emailMatches[0];
+  const messageId = targetEmail.slug.replace("email-", "");
+
+  try {
+    const gmail = createGmailClient();
+    
+    // Get the message to retrieve its threadId
+    const message = await gmail.users.messages.get({
+      userId: "me",
+      id: messageId,
+    });
+    
+    const threadId = message.data.threadId;
+    
+    // Send reply
+    await sendEmailReply(threadId, replyText);
+    
+    const subjectHeader = targetEmail.header.split(" -- ")[1] || "";
+    const subject = subjectHeader.replace("# Email: ", "").replace("# Email:", "").trim();
+    
+    return `Ref: email-${messageId}\n✅ **Reply sent successfully!**\n\n• **To:** ${message.data.payload.headers.find(h => h.name.toLowerCase() === "from")?.value || senderName}\n• **Subject:** ${subject}\n• **Reply:** ${replyText}`;
+  } catch (err) {
+    console.error("Failed to send reply:", err.message);
+    return `❌ **Failed to send email reply:** ${err.message}`;
+  }
 }

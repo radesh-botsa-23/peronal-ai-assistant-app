@@ -1,0 +1,951 @@
+\documentclass[12pt,a4paper]{report}
+
+% Essential Packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{tocloft}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, shadow, calc, fit}
+
+% Define Colors
+\definecolor{primary}{HTML}{1A365D}   % Navy Blue
+\definecolor{secondary}{HTML}{2B6CB0} % Slate Blue
+\definecolor{accent}{HTML}{319795}    % Teal
+\definecolor{darkgray}{HTML}{2D3748}  % Dark Gray
+\definecolor{lightgray}{HTML}{F7FAFC} % Light Gray
+\definecolor{codebg}{HTML}{F1F5F9}    % Code Block Background
+
+% Link colors
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    filecolor=accent,      
+    urlcolor=secondary,
+    citecolor=primary,
+}
+
+% Header and Footer setup
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{primary}{\bfseries Workplace AI Assistant System Report}}
+\fancyhead[R]{\textcolor{darkgray}{\leftmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Section formatting
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{primary}}
+  {\chaptertitlename\ \thechapter}{15pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{secondary}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{accent}}
+  {\thesubsection}{1em}{}
+
+% Listings Styling
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\footnotesize\color{darkgray},
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{teal},
+    keywordstyle=\color{primary}\bfseries,
+    stringstyle=\color{orange},
+    frame=single,
+    rulecolor=\color{lightgray},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    showstringspaces=false,
+    tabsize=2,
+    language=JavaScript
+}
+
+% Table configurations
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\begin{document}
+
+% ==========================================
+% TITLE PAGE
+% ==========================================
+\begin{titlepage}
+    \centering
+    \begin{tikzpicture}[remember picture, overlay]
+        % Border lines
+        \draw[line width=4pt, color=primary] ($(current page.north west) + (1.2in,-1.2in)$) rectangle ($(current page.south east) + (-1.2in,1.2in)$);
+        \draw[line width=1.5pt, color=accent] ($(current page.north west) + (1.3in,-1.3in)$) rectangle ($(current page.south east) + (-1.3in,1.3in)$);
+    \end{tikzpicture}
+    
+    \vspace*{2cm}
+    
+    \begin{tikzpicture}[scale=0.8]
+        % Decorative TikZ logo
+        \draw[fill=primary!10, draw=primary, line width=2pt, rounded corners=15pt] (-2,-2) rectangle (2,2);
+        \draw[fill=secondary!30, draw=secondary, line width=1.5pt, rounded corners=10pt] (-1.3,-1.3) rectangle (1.3,1.3);
+        \node[text=primary] at (0,0.3) {\Huge\bfseries AI};
+        \node[text=accent] at (0,-0.5) {\large\bfseries Assistant};
+    \end{tikzpicture}
+    
+    \vspace{2.5cm}
+    
+    {\Huge\bfseries\color{primary} COGNITIVE WORKSPACE INTEGRATION\par}
+    \vspace{0.8cm}
+    {\Large\bfseries\color{secondary} Architecture, Data Ingestion Pipelines, and Multi-Agent Design of a Personal Workplace Productivity Assistant\par}
+    \vspace{1.5cm}
+    
+    \vfill
+    
+    {\large\textbf{Technical Internship Report}}\\
+    \vspace{0.3cm}
+    {\normalsize Submitted to the Director of Technology \& Internship Program}\\
+    \vspace{1cm}
+    
+    \begin{tabular}{r l}
+        \textbf{Authors:} & Radesh and Sai Sameer \\
+        \textbf{Internship Title:} & AEH Interns \\
+        \textbf{Hosting Department:} & AI Research and Systems Engineering \\
+        \textbf{Workspace Path:} & \texttt{c:/Users/botsa/email-collector} \\
+        \textbf{Date of Submission:} & July 2026 \\
+    \end{tabular}
+    
+    \vspace{2cm}
+\end{titlepage}
+
+% ==========================================
+% ABSTRACT
+% ==========================================
+\begin{abstract}
+This report details the system architecture, design specifications, and operational workflows of the \textbf{Personal AI Assistant for Workplace Productivity}. Built upon a state-of-the-art multi-agent framework (\textbf{GStack}) and integrated with a local vector-relational hybrid knowledge base (\textbf{GBrain}), the assistant serves as an intelligent cognitive extension for modern knowledge workers. By integrating communication gateways like **Discord** and **WhatsApp**, ingestion channels such as the **Google Workspace APIs** (Gmail, Google Calendar) and **Fireflies.ai**, and advanced multimodal LLMs (\textbf{Gemini 1.5 Flash} and \textbf{Gemini 2.5 Flash}), the assistant automates administrative operations, compiles daily productivity reports, prepares preparatory meeting summaries, logs messaging threads, and processes meeting recordings. This document offers a detailed walkthrough of the implementation files, database schemes, network webhooks, daemon pipelines, and cross-platform WSL-to-Windows bridging, providing a production-grade blueprint for collaborative workspaces.
+\end{abstract}
+
+\newpage
+\tableofcontents
+
+% ==========================================
+% CHAPTER 1: INTRODUCTION
+% ==========================================
+\chapter{Introduction}
+\label{chap:introduction}
+
+\section{Background and Motivation}
+Modern corporate workspaces are characterized by fragmentation. Employees spend excessive cognitive capital hopping between distinct applications: searching through historical emails on Gmail, checking calendars, reading message histories in instant messaging platforms (WhatsApp, Slack), and transcribing meeting recordings manually. This fragmentation results in information silos and reduced work throughput.
+
+The \textbf{Personal AI Assistant} addresses this challenge by providing a central cognitive hub. It functions as an omnipresent workspace coordinator that consolidates all informational dimensions—emails, chats, calendar events, and audio recordings—into a unified context. By utilizing Large Language Models (LLMs) for semantic query processing, intent routing, and information synthesis, the assistant allows users to converse with their workspace memory.
+
+\section{System Objectives}
+The deployment objectives of this system include:
+\begin{itemize}
+    \item \textbf{Consolidation:} Automatically crawl, format, and store workplace communications (Gmail, WhatsApp, Fireflies.ai, and audio recordings) in a centralized vector-capable local database.
+    \item \textbf{Contextual Search:} Provide semantic and full-text keyword retrieval across all stored indices, enabling users to answer contextual questions (e.g., ``What did we agree on with Radesh last Monday?'').
+    \item \textbf{Automation:} Run scheduled background pipelines (using Cron and WSL system daemons) that sync data, compile daily reviews, and trigger action lists.
+    \item \textbf{Low-Friction Interfaces:} Serve interactions directly through existing team channels, such as a Discord bot and a WhatsApp webhook endpoint, allowing voice note queries and meeting file uploads.
+    \item \textbf{Edge Portability:} Maintain a lightweight footprint using local WebAssembly/native databases (PGLite) and resource-optimized in-process scripting wrappers.
+\end{itemize}
+
+\section{Document Structure}
+The remainder of this report details the engineering of the system. Chapter~\ref{chap:architecture} analyzes the architectural tiers and database models. Chapter~\ref{chap:pipelines} diagrams the flow of information across active processes and details sequence operations. Chapter~\ref{chap:orchestrator} introduces GStack and the multi-agent design pattern. Chapter~\ref{chap:codebase} conducts a module-by-module folder walkthrough. Chapter~\ref{chap:api} defines the external API clients (including Google, WhatsApp, Gemini, and Fireflies.ai), and Chapter~\ref{chap:deployment} details deployment and verification. Finally, Chapter~\ref{chap:limitations} evaluates limitations and details the roadmap.
+
+% ==========================================
+% CHAPTER 2: SYSTEM ARCHITECTURE
+% ==========================================
+\chapter{System Architecture}
+\label{chap:architecture}
+
+\section{Architectural Tiers}
+The assistant is organized into three main architectural tiers: the \textbf{Interface Layer}, the \textbf{Orchestration Layer}, and the \textbf{Data and Memory Layer}. 
+
+\begin{enumerate}
+    \item \textbf{Interface Layer:} Incorporates active listeners that capture user input and file uploads. This includes the \texttt{discord-bot.mjs} gateway (using Discord.js) and the \texttt{whatsapp-webhook.mjs} HTTP server. Voice commands are processed here using voice transcribers before routing.
+    \item \textbf{Orchestration Layer:} The core router, \textbf{GStack Orchestrator} (\texttt{agents/orchestrator.mjs}), uses Gemini to parse user statements into parameterized intents and routes them to specialized AI agents (Email, Calendar, Memory, WhatsApp, Meetings, Summary).
+    \item \textbf{Data and Memory Layer:} A hybrid persistent storage stack composed of \textbf{GBrain} (a vector/full-text database engine) and local workspaces. It supports local execution through \texttt{PGLite} or native \texttt{PostgreSQL} instances.
+\end{enumerate}
+
+\section{Complete End-to-End System Architecture Detail Diagram}
+Figure~\ref{fig:detailed_sys_arch} illustrates the detailed, end-to-end configuration of the entire system. It outlines how external servers (Google API, Meta WhatsApp Cloud API, Fireflies GraphQL API, Gemini Generative AI) interact with our hosting layers (WSL and Windows environments), database schemas, pipelines, and workspace directories.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.85, every node/.style={transform shape},
+    box/.style={draw=primary, fill=primary!5, rectangle, rounded corners=3pt, minimum width=3.8cm, minimum height=0.8cm, align=center, font=\scriptsize\bfseries, line width=1pt},
+    agent/.style={draw=accent, fill=accent!15, rectangle, rounded corners=4pt, minimum width=2.0cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries, line width=1pt},
+    arrow/.style={-Latex, line width=1pt, draw=primary},
+    bidir/.style={Latex-Latex, line width=1pt, draw=secondary}
+]
+    % --- GRID COORDINATES ---
+    % Center: X = 0
+    % Row 1: Y = 0 (User Channels)
+    % Row 2: Y = -1.2 (OpenClaw Gateway)
+    % Row 3: Y = -2.6 (Discord Bot & WhatsApp Webhook)
+    % Row 4: Y = -4.0 (GStack Orchestrator)
+    % Row 5: Y = -5.5 (5 Specialists)
+    % Row 6: Y = -8.5 (GBrain DB & Gemini LLM Engine)
+
+    % Nodes
+    \node (user_channels) [box] at (0, 0) {User Communication Channels \\ (Discord Client / WhatsApp App / Audio Upload)};
+    
+    \node (openclaw_gateway) [box] at (0, -1.2) {OpenClaw Gateway Service \\ (Agent Runtime Gateway)};
+    
+    \node (discord_bot) [box] at (-2.8, -2.6) {Discord Bot \\ \texttt{discord-bot.mjs}};
+    \node (wa_webhook) [box] at (2.8, -2.6) {WhatsApp Webhook \\ \texttt{whatsapp-webhook.mjs}};
+    
+    \node (orchestrator) [box] at (0, -4.0) {GStack Orchestrator \\ \texttt{agents/orchestrator.mjs}};
+    
+    % 5 Specialist Agents (Row 5 - Widened Spacing)
+    \node (email_agent) [agent] at (-4.8, -5.5) {Email Agent};
+    \node (memory_agent) [agent] at (-2.4, -5.5) {Memory Agent};
+    \node (calendar_agent) [agent] at (0, -5.5) {Calendar Agent};
+    \node (whatsapp_agent) [agent] at (2.4, -5.5) {WhatsApp Agent};
+    \node (meetings_agent) [agent] at (4.8, -5.5) {Meetings Agent};
+    
+    % Gemini Engine (Row 6)
+    \node (gemini_engine) [box] at (4.8, -8.65) {Gemini LLM Engine \\ (intent parsing, summaries, briefs)};
+
+    % Manual Vector Database Cylinder Drawing
+    % Centered at (0, -8.65)
+    \draw[draw=secondary, fill=secondary!10, line width=1pt] (0, -9.5) ellipse (1.6cm and 0.35cm);
+    \fill[fill=secondary!10] (-1.6, -9.5) rectangle (1.6, -7.8);
+    \draw[draw=secondary, line width=1pt] (-1.6, -9.5) -- (-1.6, -7.8);
+    \draw[draw=secondary, line width=1pt] (1.6, -9.5) -- (1.6, -7.8);
+    \draw[draw=secondary, fill=secondary!20, line width=1pt] (0, -7.8) ellipse (1.6cm and 0.35cm);
+    \node[align=center, font=\scriptsize\bfseries, text=primary] at (0, -8.7) {GBrain Database \\ (PGLite or PostgreSQL)};
+
+    % Custom Anchors for Database Connections
+    \coordinate (db_top) at (0, -7.45);
+    \coordinate (db_left) at (-1.6, -8.65);
+    \coordinate (db_right) at (1.6, -8.65);
+
+    % Connections
+    \draw [arrow] (user_channels) -- (openclaw_gateway);
+    
+    \draw [arrow] (openclaw_gateway.south) -| (discord_bot.north);
+    \draw [arrow] (openclaw_gateway.south) -| (wa_webhook.north);
+    
+    \draw [arrow] (discord_bot.south) -- (orchestrator.north-west);
+    \draw [arrow] (wa_webhook.south) -- (orchestrator.north-east);
+    
+    \draw [arrow] (orchestrator) -- (email_agent.north);
+    \draw [arrow] (orchestrator) -- (memory_agent.north);
+    \draw [arrow] (orchestrator) -- (calendar_agent.north);
+    \draw [arrow] (orchestrator) -- (whatsapp_agent.north);
+    \draw [arrow] (orchestrator) -- (meetings_agent.north);
+    
+    % Agent to Database / Gemini Connections
+    \draw [arrow] (email_agent.south) |- ($(db_left) + (0, -0.4)$);
+    \draw [arrow] (memory_agent.south) |- ($(db_left) + (0, 0.4)$);
+    \draw [arrow] (calendar_agent.south) -- (db_top);
+    \draw [arrow] (whatsapp_agent.south) |- ($(db_right) + (0, 0.4)$);
+    \draw [arrow] (meetings_agent.south) -- (gemini_engine.north);
+    
+    \draw [bidir] (db_right) -- (gemini_engine.west);
+\end{tikzpicture}
+\caption{System Architecture Diagram}
+\label{fig:detailed_sys_arch}
+\end{figure}
+
+\section{Database and Vector Storage Layer (GBrain)}
+Memory access is powered by \textbf{GBrain}, a knowledge engine configured to run inside a Windows Subsystem for Linux (WSL) workspace. 
+
+\subsection{WSL Bridging and CLI Invocation}
+Due to the hybrid setup where Node.js client logic runs on a Windows host and the vector-relational engine lives inside WSL, the client uses a shell wrapper. 
+As defined in \texttt{lib/gbrain-client.mjs}, the platform is checked dynamically. On Windows platforms, the shell redirects database requests using the WSL wrapper:
+\begin{lstlisting}[language=JavaScript, caption=Dynamic OS Bridging in gbrain-client.mjs]
+if (IS_WINDOWS) {
+  return execFileSync("wsl", [
+    "bash", "-c",
+    `export PATH="${BUN_PATH}:\$PATH" && export GEMINI_API_KEY='${config.gemini.apiKey}' && gbrain ${cmd}`
+  ], { encoding: "utf8", timeout: 15000 });
+} else {
+  return execSync(`${GBRAIN_PATH} ${cmd}`, { ... });
+}
+\end{lstlisting}
+
+\subsection{Hybrid Storage Models}
+When deployed in local development (WSL environment), GBrain stores data in a file-backed \texttt{PGLite} instance located at \texttt{\textasciitilde{}/.gbrain/brain.pglite}. 
+In containerized environments (such as Docker or production hosts), the startup script (\texttt{start.mjs}) initializes a native local PostgreSQL cluster inside the container:
+\begin{lstlisting}[language=bash, caption=PostgreSQL initialization script inside start.mjs]
+initdb -D /root/.postgres-data
+pg_ctl -D /root/.postgres-data -l /tmp/postgres.log -o "-F -p 5432 -k /tmp" start
+createdb -p 5432 -h /tmp -U node gbrain
+gbrain init --url postgresql://node@localhost:5432/gbrain --no-embedding
+\end{lstlisting}
+This dual-configuration setup allows development simplicity on a local machine while scaling up to containerized database transactions in production.
+
+\section{AI Foundation: Gemini LLM Integration}
+The system uses Google Gemini Models as its logical foundation.
+\begin{itemize}
+    \item \textbf{Gemini 1.5 Flash / Gemini 2.5 Flash:} Configured in \texttt{lib/gemini-client.mjs} and client transcribers. This model is selected for its processing efficiency, 1-million-token context window, and native multimodal compatibility, which enables direct audio transcriptions.
+    \item \textbf{Gemini 2.0 Flash Lite:} Used inside \texttt{lib/voice-handler.mjs} for fast transcription of Discord voice uploads (MPEG, OGG).
+\end{itemize}
+
+% ==========================================
+% CHAPTER 3: DATA FLOW & PIPELINES
+% ==========================================
+\chapter{Data Flow \& Processing Pipelines}
+\label{chap:pipelines}
+
+\section{Email Ingestion Pipeline Workflow}
+The email sync pipeline runs periodically (every 30 minutes) to parse recent communications.
+The Gmail client uses Google OAuth 2.0. To avoid ingestion bottlenecks, the ingestion pipeline maps files to unique slugs (\texttt{email-[id]}) and checks if they already exist before running insertion queries, preventing duplicate records.
+
+\subsection{Ingestion Pipeline Sequence Diagram}
+Figure~\ref{fig:seq_ingestion} illustrates the sequence flow of the ingestion process executed by \texttt{ingestion-pipeline.mjs}. It queries raw emails and calendars, handles deduplication check queries on GBrain, saves raw backups to directories, and pushes upcoming meeting alerts to Discord channels.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.62, every node/.style={transform shape},
+    node distance=1.4cm,
+    lifeline/.style={draw=gray, dashed, line width=1pt},
+    entity/.style={draw=primary, fill=lightgray!30, rectangle, rounded corners=3pt, minimum width=2.0cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+    msg/.style={-Latex, line width=0.8pt, font=\tiny, align=center},
+    ret/.style={-Latex, dashed, line width=0.8pt, font=\tiny, align=center},
+    self/.style={-Latex, line width=0.8pt, font=\tiny, align=center}
+]
+    % LIFELINE COORDINATES (Total width ~ 15cm)
+    \def\xinterval{0}
+    \def\xpipeline{2.2}
+    \def\xgmail{4.8}
+    \def\xgbrain{7.8}
+    \def\xcalendar{10.6}
+    \def\xdiscord{13.0}
+    \def\xdata{15.4}
+
+    % LIFELINE LABELS (TOP)
+    \node (l_interval) [entity] at (\xinterval, 0.5) {\texttt{setInterval}};
+    \node (l_pipeline) [entity] at (\xpipeline, 0.5) {\texttt{ingestion-pipeline}};
+    \node (l_gmail) [entity] at (\xgmail, 0.5) {Gmail API};
+    \node (l_gbrain) [entity] at (\xgbrain, 0.5) {GBrain};
+    \node (l_calendar) [entity] at (\xcalendar, 0.5) {Google Calendar};
+    \node (l_discord) [entity] at (\xdiscord, 0.5) {Discord API};
+    \node (l_data) [entity] at (\xdata, 0.5) {\texttt{data/messages/}};
+
+    % LIFELINE LINES
+    \draw [lifeline] (\xinterval, 0) -- (\xinterval, -14.5);
+    \draw [lifeline] (\xpipeline, 0) -- (\xpipeline, -14.5);
+    \draw [lifeline] (\xgmail, 0) -- (\xgmail, -14.5);
+    \draw [lifeline] (\xgbrain, 0) -- (\xgbrain, -14.5);
+    \draw [lifeline] (\xcalendar, 0) -- (\xcalendar, -14.5);
+    \draw [lifeline] (\xdiscord, 0) -- (\xdiscord, -14.5);
+    \draw [lifeline] (\xdata, 0) -- (\xdata, -14.5);
+
+    % EXECUTION FLOW
+    \draw [msg] (\xinterval, -0.6) -- node[above] {Trigger} (\xpipeline, -0.6);
+    \draw [msg] (\xpipeline, -1.2) -- node[above] {Fetch 50 emails} (\xgmail, -1.2);
+    \draw [ret] (\xgmail, -1.8) -- node[above] {Email[] body} (\xpipeline, -1.8);
+
+    % LOOP: EACH EMAIL
+    \draw [draw=darkgray, dashed, rounded corners=2pt] (-0.5, -2.1) rectangle (9.0, -5.2);
+    \node [anchor=north west, font=\tiny\bfseries] at (-0.5, -2.1) {loop: [Each email]};
+    
+    \draw [msg] (\xpipeline, -2.6) -- node[above] {\texttt{documentExists}?} (\xgbrain, -2.6);
+    
+    % ALT: NEW EMAIL / EXISTS
+    \draw [draw=accent, dotted, rounded corners=2pt] (1.0, -3.1) rectangle (8.8, -5.0);
+    \node [anchor=north west, font=\tiny\bfseries, color=accent] at (1.0, -3.1) {alt};
+    \node [anchor=north west, font=\tiny, color=accent] at (1.0, -3.4) {[New email]};
+    \draw [msg] (\xpipeline, -3.8) -- node[above] {\texttt{storeDocument}} (\xgbrain, -3.8);
+    
+    \node [anchor=north west, font=\tiny, color=accent] at (1.0, -4.2) {[Exists]};
+    \draw [self] (\xpipeline, -4.6) .. controls (\xpipeline+0.7, -4.4) and (\xpipeline+0.7, -4.8) .. node[right] {Skip} (\xpipeline, -4.6);
+
+    % SAVE RAW JSON
+    \draw [msg] (\xpipeline, -5.8) -- node[above] {Save JSON backup} (\xdata, -5.8);
+
+    % CALENDAR EVENTS FLOW
+    \draw [msg] (\xpipeline, -6.5) -- node[above] {\texttt{getEvents(48h)}} (\xcalendar, -6.5);
+    \draw [ret] (\xcalendar, -7.1) -- node[above] {Event[]} (\xpipeline, -7.1);
+
+    % LOOP: EACH EVENT
+    \draw [draw=darkgray, dashed, rounded corners=2pt] (1.0, -7.5) rectangle (9.0, -9.1);
+    \node [anchor=north west, font=\tiny\bfseries] at (1.0, -7.5) {loop: [Each event]};
+    \draw [msg] (\xpipeline, -8.2) -- node[above] {\texttt{storeCalendarEvent}} (\xgbrain, -8.2);
+
+    % CHECK UPCOMING
+    \draw [self] (\xpipeline, -9.8) .. controls (\xpipeline+1.0, -9.6) and (\xpipeline+1.0, -10.0) .. node[right] {\texttt{checkForUpcomingMeetings}} (\xpipeline, -9.8);
+
+    % ALT: MEETING IN NEXT 60 MIN
+    \draw [draw=accent, dotted, rounded corners=2pt] (1.0, -10.5) rectangle (14.2, -13.8);
+    \node [anchor=north west, font=\tiny\bfseries, color=accent] at (1.0, -10.5) {alt: [Meeting in 60m \& no alert]};
+    
+    \draw [msg] (\xpipeline, -11.5) -- node[above] {Send ``Meeting Alert''} (\xdiscord, -11.5);
+    
+    \draw [self] (\xpipeline, -12.7) .. controls (\xpipeline+0.8, -12.5) and (\xpipeline+0.8, -12.9) .. node[right] {\texttt{markAlertAsSent}} (\xpipeline, -12.7);
+
+    % LIFELINE LABELS (BOTTOM)
+    \node (b_interval) [entity] at (\xinterval, -15.0) {\texttt{setInterval}};
+    \node (b_pipeline) [entity] at (\xpipeline, -15.0) {\texttt{ingestion-pipeline}};
+    \node (b_gmail) [entity] at (\xgmail, -15.0) {Gmail API};
+    \node (b_gbrain) [entity] at (\xgbrain, -15.0) {GBrain};
+    \node (b_calendar) [entity] at (\xcalendar, -15.0) {Google Calendar};
+    \node (b_discord) [entity] at (\xdiscord, -15.0) {Discord API};
+    \node (b_data) [entity] at (\xdata, -15.0) {\texttt{data/messages/}};
+\end{tikzpicture}
+\caption{Ingestion Pipeline Sequence Diagram (Portrait Layout)}
+\label{fig:seq_ingestion}
+\end{figure}
+
+\section{Real-Time User Query Flow}
+When a user submits a textual message via Discord or WhatsApp, the message is routed as shown in Figure~\ref{fig:seq_user_query}. The orchestrator parses intents using Gemini, queries the database, filters results by email tags and specific senders, and delivers the response text.
+
+\subsection{User Query Flow Sequence Diagram}
+Figure~\ref{fig:seq_user_query} illustrates the sequence flow of a user query seeking search results over emails.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.64, every node/.style={transform shape},
+    node distance=1.4cm,
+    lifeline/.style={draw=gray, dashed, line width=1pt},
+    entity/.style={draw=primary, fill=lightgray!30, rectangle, rounded corners=3pt, minimum width=2.0cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+    msg/.style={-Latex, line width=0.8pt, font=\tiny, align=center},
+    ret/.style={-Latex, dashed, line width=0.8pt, font=\tiny, align=center},
+    self/.style={-Latex, line width=0.8pt, font=\tiny, align=center}
+]
+    % LIFELINE COORDINATES
+    \def\xuser{0}
+    \def\xbot{2.4}
+    \def\xorch{5.0}
+    \def\xgemini{8.2}
+    \def\xagent{10.8}
+    \def\xgbrain{13.2}
+    \def\xgeminir{15.4}
+
+    % LIFELINE LABELS (TOP)
+    \node (l_user) [entity] at (\xuser, 0.5) {User};
+    \node (l_bot) [entity] at (\xbot, 0.5) {Bot / Webhook};
+    \node (l_orch) [entity] at (\xorch, 0.5) {Orchestrator};
+    \node (l_gemini) [entity] at (\xgemini, 0.5) {Gemini (Intent)};
+    \node (l_agent) [entity] at (\xagent, 0.5) {Special Agent};
+    \node (l_gbrain) [entity] at (\xgbrain, 0.5) {GBrain (Search)};
+    \node (l_geminir) [entity] at (\xgeminir, 0.5) {Gemini (Reply)};
+
+    % LIFELINE LINES
+    \draw [lifeline] (\xuser, 0) -- (\xuser, -11.5);
+    \draw [lifeline] (\xbot, 0) -- (\xbot, -11.5);
+    \draw [lifeline] (\xorch, 0) -- (\xorch, -11.5);
+    \draw [lifeline] (\xgemini, 0) -- (\xgemini, -11.5);
+    \draw [lifeline] (\xagent, 0) -- (\xagent, -11.5);
+    \draw [lifeline] (\xgbrain, 0) -- (\xgbrain, -11.5);
+    \draw [lifeline] (\xgeminir, 0) -- (\xgeminir, -11.5);
+
+    % EXECUTION FLOW
+    \draw [msg] (\xuser, -0.8) -- node[above] {``Show me emails from John about budget''} (\xbot, -0.8);
+    \draw [msg] (\xbot, -1.6) -- node[above] {\texttt{processCommand(message)}} (\xorch, -1.6);
+    
+    % STATE BOX
+    \node [draw=darkgray, fill=darkgray!15, rectangle, rounded corners=2pt, font=\tiny, align=center, inner sep=3pt] at (\xorch, -2.4) {Check prompt state \\ (meeting prep confirm)};
+    
+    \draw [msg] (\xorch, -3.2) -- node[above] {\texttt{parseIntent(message)}} (\xgemini, -3.2);
+    \draw [ret] (\xgemini, -4.0) -- node[above] {[intent: ``search\_emails'', query: ``budget'', sender: ``John'']} (\xorch, -4.0);
+
+    \draw [msg] (\xorch, -4.8) -- node[above] {\texttt{searchEmails("budget", "John")}} (\xagent, -4.8);
+    \draw [msg] (\xagent, -5.6) -- node[above] {\texttt{queryGBrain("from John budget")}} (\xgbrain, -5.6);
+    \draw [ret] (\xgbrain, -6.4) -- node[above] {Raw search results} (\xagent, -6.4);
+
+    % AGENT PROCESSING LOOPS
+    \draw [self] (\xagent, -7.0) .. controls (\xagent+0.7, -6.8) and (\xagent+0.7, -7.2) .. node[right] {Filter to email slugs} (\xagent, -7.0);
+    \draw [self] (\xagent, -7.8) .. controls (\xagent+0.7, -7.6) and (\xagent+0.7, -8.0) .. node[right] {Filter by sender ``John''} (\xagent, -7.8);
+
+    \draw [ret] (\xagent, -8.6) -- node[above] {Formatted results} (\xorch, -8.6);
+    \draw [ret] (\xorch, -9.4) -- node[above] {Response text} (\xbot, -9.4);
+    
+    \draw [ret, dashed] (\xbot, -10.2) -- node[above] {Email 1: Budget Review...} (\xuser, -10.2);
+
+    % LIFELINE LABELS (BOTTOM)
+    \node (b_user) [entity] at (\xuser, -12.0) {User};
+    \node (b_bot) [entity] at (\xbot, -12.0) {Bot / Webhook};
+    \node (b_orch) [entity] at (\xorch, -12.0) {Orchestrator};
+    \node (b_gemini) [entity] at (\xgemini, -12.0) {Gemini (Intent)};
+    \node (b_agent) [entity] at (\xagent, -12.0) {Special Agent};
+    \node (b_gbrain) [entity] at (\xgbrain, -12.0) {GBrain (Search)};
+    \node (b_geminir) [entity] at (\xgeminir, -12.0) {Gemini (Reply)};
+\end{tikzpicture}
+\caption{User Query Flow Sequence Diagram (Portrait Layout)}
+\label{fig:seq_user_query}
+\end{figure}
+
+\section{Meeting Recording Ingestion Flow}
+Meeting audio files (.mp3, .wav, .webm) uploaded via Discord are processed asynchronously. As mapped in Figure~\ref{fig:seq_meeting}, the binary is downloaded by the Voice Handler, transcribed, summarized into structured variables, and committed to database memory.
+
+\subsection{Meeting Recording Ingestion Sequence Diagram}
+Figure~\ref{fig:seq_meeting} illustrates the sequence flow of an uploaded meeting recording being transcribed, summarized, and saved.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.64, every node/.style={transform shape},
+    node distance=1.4cm,
+    lifeline/.style={draw=gray, dashed, line width=1pt},
+    entity/.style={draw=primary, fill=lightgray!30, rectangle, rounded corners=3pt, minimum width=2.0cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+    msg/.style={-Latex, line width=0.8pt, font=\tiny, align=center},
+    ret/.style={-Latex, dashed, line width=0.8pt, font=\tiny, align=center},
+    self/.style={-Latex, line width=0.8pt, font=\tiny, align=center}
+]
+    % LIFELINE COORDINATES
+    \def\xuser{0}
+    \def\xdiscord{2.8}
+    \def\xvoice{5.6}
+    \def\xtranscriber{8.6}
+    \def\xsummarizer{11.8}
+    \def\xgbrain{14.8}
+
+    % LIFELINE LABELS (TOP)
+    \node (l_user) [entity] at (\xuser, 0.5) {User};
+    \node (l_discord) [entity] at (\xdiscord, 0.5) {Discord Bot};
+    \node (l_voice) [entity] at (\xvoice, 0.5) {Voice Handler};
+    \node (l_transcriber) [entity] at (\xtranscriber, 0.5) {Transcriber};
+    \node (l_summarizer) [entity] at (\xsummarizer, 0.5) {Summarizer};
+    \node (l_gbrain) [entity] at (\xgbrain, 0.5) {GBrain};
+
+    % LIFELINE LINES
+    \draw [lifeline] (\xuser, 0) -- (\xuser, -10.5);
+    \draw [lifeline] (\xdiscord, 0) -- (\xdiscord, -10.5);
+    \draw [lifeline] (\xvoice, 0) -- (\xvoice, -10.5);
+    \draw [lifeline] (\xtranscriber, 0) -- (\xtranscriber, -10.5);
+    \draw [lifeline] (\xsummarizer, 0) -- (\xsummarizer, -10.5);
+    \draw [xgbrain] (\xgbrain, 0) -- (\xgbrain, -10.5);
+
+    % EXECUTION FLOW
+    \draw [msg] (\xuser, -0.8) -- node[above] {Upload audio + ``meeting recording''} (\xdiscord, -0.8);
+    
+    \draw [self] (\xdiscord, -1.5) .. controls (\xdiscord+0.7, -1.3) and (\xdiscord+0.7, -1.7) .. node[right] {Detect audio attachment \\ + ``meeting'' keyword} (\xdiscord, -1.5);
+    
+    \draw [msg] (\xdiscord, -2.4) -- node[above] {\texttt{downloadAttachment}} (\xvoice, -2.4);
+    \draw [ret] (\xvoice, -3.0) -- node[above] {\texttt{audioBuffer}} (\xdiscord, -3.0);
+
+    \draw [msg] (\xdiscord, -3.8) -- node[above] {\texttt{transcribeBuffer}} (\xtranscriber, -3.8);
+    
+    % STATE BOX ON TRANSCRIBER
+    \node [draw=darkgray, fill=darkgray!15, rectangle, rounded corners=2pt, font=\tiny, align=center, inner sep=3pt] at (\xtranscriber, -4.5) {Gemini multimodal: \\ audio $\rightarrow$ text transcript};
+    
+    \draw [ret] (\xtranscriber, -5.2) -- node[above] {Raw transcript text} (\xdiscord, -5.2);
+
+    \draw [msg] (\xdiscord, -6.0) -- node[above] {\texttt{analyzeMeeting(transcript)}} (\xsummarizer, -6.0);
+    
+    % STATE BOX ON SUMMARIZER
+    \node [draw=darkgray, fill=darkgray!15, rectangle, rounded corners=2pt, font=\tiny, align=center, inner sep=3pt] at (\xsummarizer, -6.8) {Gemini analysis: \\ $\rightarrow$ summary, action items, \\ decisions, topics};
+    
+    \draw [ret] (\xsummarizer, -7.6) -- node[above] {\{summary, actionItems, decisions\}} (\xdiscord, -7.6);
+
+    \draw [msg] (\xdiscord, -8.4) -- node[above] {\texttt{storeDocument}} (\xgbrain, -8.4);
+    
+    \draw [ret, dashed] (\xdiscord, -9.4) -- node[above] {Meeting Processed} (\xuser, -9.4);
+
+    % LIFELINE LABELS (BOTTOM)
+    \node (b_user) [entity] at (\xuser, -11.0) {User};
+    \node (b_discord) [entity] at (\xdiscord, -11.0) {Discord Bot};
+    \node (b_voice) [entity] at (\xvoice, -11.0) {Voice Handler};
+    \node (b_transcriber) [entity] at (\xtranscriber, -11.0) {Transcriber};
+    \node (b_summarizer) [entity] at (\xsummarizer, -11.0) {Summarizer};
+    \node (b_gbrain) [entity] at (\xgbrain, -11.0) {GBrain};
+\end{tikzpicture}
+\caption{Meeting Recording Ingestion Sequence Diagram (Portrait Layout)}
+\label{fig:seq_meeting}
+\end{figure}
+
+\section{Daily Digest Generation Pipeline}
+The Daily Digest is a background cron job scheduled for 8:00 AM. It gathers context from:
+\begin{itemize}
+    \item Google Calendar: Fetching the day's schedule via \texttt{getTodaysEvents()}.
+    \item GBrain Email memory: Querying for today's ingested emails.
+    \item GBrain Tasks memory: Querying for pending action items.
+\end{itemize}
+These sources are consolidated and formatted by Gemini into a markdown report, which is then posted to the designated Discord channel.
+
+% ==========================================
+% CHAPTER 4: AGENT ORCHESTRATION (GSTACK)
+% ==========================================
+\chapter{Agent Orchestration \& The GStack Framework}
+\label{chap:orchestrator}
+
+\section{Intent Parsing and Routing Strategy}
+The orchestration layer uses the **GStack** framework. Instead of matching keywords using regex, GStack uses Gemini to classify user inputs into structured actions.
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{L{3.5cm} L{3.5cm} L{8cm}}
+\toprule
+\textbf{Classified Intent} & \textbf{Specialist Agent} & \textbf{Functional Output} \\
+\midrule
+\texttt{search\_emails} & Email Agent & Keyword/semantic search over historical emails. \\
+\texttt{summarize\_emails} & Email Agent & 500-word daily email highlights summary. \\
+\texttt{important\_emails} & Email Agent & Urgent emails ranked by priority indicators. \\
+\texttt{action\_items} & Email Agent & Extraction of commitments and deadlines. \\
+\texttt{daily\_report} & Summary Agent & Daily calendar, task, and email overview. \\
+\texttt{meeting\_prep} & Meeting Processor & Meeting briefing generated from related threads and past meetings. \\
+\texttt{todays\_meetings} & Calendar Agent & Event lists for the current day. \\
+\texttt{upcoming\_meetings} & Calendar Agent & Schedule overview for the next 24 hours. \\
+\texttt{meeting\_summary} & Meetings Agent & Aggregation of discussed items from current meetings. \\
+\texttt{search\_whatsapp} & WhatsApp Agent & Historical WhatsApp message retrieval. \\
+\texttt{general\_query} & Memory Agent & Cross-source fallback semantic query. \\
+\bottomrule
+\end{tabular}
+\caption{GStack Intent Classification Matrix}
+\label{tab:intents}
+\end{table}
+
+\section{Specialist Agent Roles}
+\begin{itemize}
+    \item \textbf{Email Agent (\texttt{agents/email-agent.mjs}):} Searches, prioritizes, and filters emails. It uses key urgency phrases like ``urgent'', ``deadline'', or ``ASAP'' to rank messages.
+    \item \textbf{Memory Agent (\texttt{agents/memory-agent.mjs}):} Handles general queries by running multi-source document queries on GBrain and compiling a context list to answer user prompts.
+    \item \textbf{Calendar Agent (\texttt{agents/calendar-agent.mjs}):} Integrates with the Google Calendar API client to retrieve agendas and meeting details.
+    \item \textbf{WhatsApp Agent (\texttt{agents/whatsapp-agent.mjs}):} Logs conversation threads to GBrain and generates context-aware replies for Meta API delivery.
+    \item \textbf{Summary Agent (\texttt{agents/summary-agent.mjs}):} Consolidates emails, tasks, and calendar events into a daily productivity report.
+    \item \textbf{Meeting Processor (\texttt{agents/meeting-processor.mjs}):} Orchestrates transcription, structured analysis, and database storage for audio uploads.
+\end{itemize}
+
+% ==========================================
+% CHAPTER 5: DATABASE SCHEMA & MEMORY
+% ==========================================
+\chapter{Database Schema \& Memory Structure}
+\label{chap:database}
+
+\section{Hybrid Relational-Vector Design}
+GBrain combines semantic vector searches and full-text keyword indexing. 
+Documents are stored under unique identifiers (slugs), which prevent duplicate records during batch syncs:
+\begin{lstlisting}[language=SQL, caption=Logical representation of GBrain internal tables]
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    title TEXT,
+    content TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE document_embeddings (
+    document_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+    embedding VECTOR(1536),
+    PRIMARY KEY (document_id)
+);
+\end{lstlisting}
+\textsf{Note: On platform setups where local embedding models are not available, GBrain falls back to full-text keyword indexing (FTS).}
+
+\section{Document Models and Schema Structuring}
+Data is stored using structured markdown templates, which help the LLM identify metadata headers:
+
+\subsection{Email Document Format}
+Stored under slug \texttt{email-[message-id]}:
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+# Email: [Subject]
+From: [Sender Name] <email@address.com>
+To: [Recipient List]
+Subject: [Subject Text]
+Date: [Date String]
+
+[Email Body Text]
+\end{lstlisting}
+
+\subsection{Calendar Event Format}
+Stored under slug \texttt{calendar-[event-id]}:
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+# Calendar Event: [Title]
+Start: [Date & Time]
+End: [Time]
+Location: [Location]
+Attendees: [Attendees List]
+Organizer: [Organizer]
+Meet Link: [Meeting Link]
+
+[Event Description]
+\end{lstlisting}
+
+\subsection{Meeting Record Format}
+Stored under slug \texttt{meeting-[timestamp]}:
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+# Meeting: [Title]
+Date: [Date]
+Platform: [Platform]
+Participants: [Participants List]
+
+## Summary
+[Paragraphs of Summary]
+
+## Action Items
+1. [Task owner: description]
+
+## Decisions Made
+1. [Decision description]
+
+## Raw Transcript
+[Spoken statements recorded]
+\end{lstlisting}
+
+% ==========================================
+% CHAPTER 6: FILE STRUCTURE & CODEBASE WALKTHROUGH
+% ==========================================
+\chapter{Codebase Structure \& File Walkthrough}
+\label{chap:codebase}
+
+\section{Project Directory Layout}
+The file structure is organized as follows:
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+c:/Users/botsa/email-collector
+├── agents/                       # GStack AI Specialist Agents
+│   ├── calendar-agent.mjs        # Calendar queries and prep
+│   ├── email-agent.mjs           # Email parsing, search, and action items
+│   ├── meeting-processor.mjs     # Custom meeting analysis and storage logic
+│   ├── meetings-agent.mjs        # Meetings retrieval and third-party syncs
+│   ├── memory-agent.mjs          # Cross-source database query coordinator
+│   ├── orchestrator.mjs          # Intent routing core
+│   ├── summary-agent.mjs         # Daily status generator
+│   └── whatsapp-agent.mjs        # WhatsApp logs search and responder
+├── lib/                          # API and Helper clients
+│   ├── calendar-client.mjs       # Google Calendar API helper
+│   ├── fireflies-client.mjs      # Fireflies API endpoint client
+│   ├── gbrain-client.mjs         # WSL-to-Windows DB CLI driver
+│   ├── gemini-client.mjs         # Gemini API client wrapper
+│   ├── gmail-client.mjs          # Gmail API auth and query client
+│   ├── meeting-summarizer.mjs    # Gemini-based transcript summarizer
+│   ├── meeting-transcriber.mjs   # Gemini-based audio transcription
+│   ├── openclaw-client.mjs       # OpenClaw runtime interface client
+│   ├── session-state.mjs         # Confirmation state manager
+│   ├── voice-handler.mjs         # Discord audio handler and transcriber
+│   └── whatsapp-client.mjs       # Meta WhatsApp message sender
+├── scripts/                      # Operation and maintenance scripts
+│   ├── daily-report-cron.mjs     # Cron script for morning digests
+│   ├── ingest-emails-to-memory.mjs # Gmail to memory sync script
+│   └── setup-workspace.sh        # Setup environment variables
+├── start.mjs                     # Primary entry point
+├── discord-bot.mjs               # Discord listener service
+├── whatsapp-webhook.mjs          # WhatsApp HTTP hook server
+└── package.json                  # Dependencies configuration
+\end{lstlisting}
+
+\newpage
+\section{Exhaustive File Metrics and Responsibilities}
+Table~\ref{tab:file_metrics} details the line counts, sizes, and architectural roles of the key implementation files in the codebase.
+
+\begin{table}[htbp]
+\centering
+\tiny
+\begin{tabular}{L{4cm} C{1.2cm} C{1.2cm} L{8cm}}
+\toprule
+\textbf{File Path} & \textbf{Lines} & \textbf{Size (B)} & \textbf{Architectural Role} \\
+\midrule
+\texttt{start.mjs} & 301 & 12,873 & System entry point. Configures databases and starts Discord, WhatsApp, and email pipelines. \\
+\texttt{discord-bot.mjs} & 213 & 7,800 & Discord client. Manages voice notes, audio processing, and commands. \\
+\texttt{whatsapp-webhook.mjs} & 132 & 4,234 & WhatsApp web server. Handshakes with Meta Cloud API and processes incoming webhooks. \\
+\texttt{agents/orchestrator.mjs} & 157 & 6,555 & GStack central intent parser and routing coordinator. \\
+\texttt{agents/email-agent.mjs} & 152 & 5,151 & Manages email querying, prioritization, and task extraction. \\
+\texttt{agents/meeting-processor.mjs} & 179 & 6,337 & Processes, analyzes, and saves meeting audio uploads. \\
+\texttt{agents/meetings-agent.mjs} & 255 & 11,341 & Handles Fireflies.ai meeting queries and search overrides. \\
+\texttt{agents/memory-agent.mjs} & 93 & 3,957 & Cross-source database search coordinator. \\
+\texttt{agents/whatsapp-agent.mjs} & 153 & 5,258 & Handles WhatsApp message storage and intent routing. \\
+\texttt{lib/gbrain-client.mjs} & 255 & 7,955 & Bridge client managing database commands across Windows and WSL. \\
+\texttt{lib/gemini-client.mjs} & 200 & 7,372 & Google Generative AI API client with built-in retries and timeouts. \\
+\texttt{lib/gmail-client.mjs} & 138 & 4,025 & Interfaces with Gmail API for mail fetching. \\
+\texttt{lib/calendar-client.mjs} & 138 & 4,657 & Google Calendar client. Fetches daily events. \\
+\texttt{lib/voice-handler.mjs} & 94 & 3,030 & Transcribes short audio attachments using Gemini 2.0 Flash Lite. \\
+\texttt{lib/meeting-transcriber.mjs} & 85 & 2,798 & Transcribes long meeting files using Gemini multimodal support. \\
+\texttt{lib/meeting-summarizer.mjs} & 81 & 2,919 & Analyzes transcripts to generate summaries and key decisions. \\
+\texttt{lib/whatsapp-client.mjs} & 119 & 3,105 & Meta Business API wrapper for WhatsApp messaging. \\
+\texttt{scripts/ingest-emails-to-memory.mjs} & 210 & 6,202 & Syncs Gmail messages to OpenClaw files and GBrain. \\
+\texttt{scripts/daily-report-cron.mjs} & 96 & 3,216 & Compiles the 8:00 AM daily status summary and posts to Discord. \\
+\bottomrule
+\end{tabular}
+\caption{Codebase Metrics and System Responsibilities}
+\label{tab:file_metrics}
+\end{table}
+
+% ==========================================
+% CHAPTER 7: API INTEGRATIONS
+% ==========================================
+\chapter{API Integrations \& Gateway Handshakes}
+\label{chap:api}
+
+\section{Google APIs: Gmail and Calendar Integration}
+The system uses the Google APIs Client Library (\texttt{googleapis}) to query Gmail and Calendar.
+\begin{itemize}
+    \item \textbf{Authentication Protocol:} Uses OAuth 2.0. The script \texttt{gmail-auth.mjs} runs a local server to capture redirect tokens and saves them in \texttt{token.json}.
+    \item \textbf{Gmail Scope:} Configured for \texttt{https://www.googleapis.com/auth/gmail.readonly}. The client downloads multi-part MIME mail structures, extracts raw HTML or plain text, and decodes base64 envelopes.
+    \item \textbf{Calendar Scope:} Configured for \texttt{https://www.googleapis.com/auth/calendar.readonly}. It retrieves calendar events using query parameter ranges.
+\end{itemize}
+
+\section{Meta Cloud WhatsApp Business API}
+WhatsApp integration is managed via the Meta Business Suite Developer platform.
+\begin{itemize}
+    \item \textbf{Webhook Verification:} Standard GET handshake request:
+    \begin{lstlisting}[language=JavaScript]
+    if (mode === "subscribe" && token === VERIFY_TOKEN) {
+      res.writeHead(200);
+      res.end(challenge);
+    }
+    \end{lstlisting}
+    \item \textbf{Message Ingestion:} Parsed from inbound JSON structures. The script extracts the sender's phone number, profile name, message timestamp, and content body.
+    \item \textbf{Message Delivery:} Sends outgoing responses using Meta's API endpoints via POST requests containing JSON payloads.
+\end{itemize}
+
+\section{Discord Gateway API}
+The Discord client (\texttt{discord-bot.mjs}) uses \texttt{discord.js} with Gateway Intents:
+\begin{lstlisting}[language=JavaScript]
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessages
+  ]
+});
+\end{lstlisting}
+Because Discord limits post replies to 2000 characters, responses are split using newline boundaries prior to sending:
+\begin{lstlisting}[language=JavaScript]
+function splitMessage(text) {
+  % If text.length > 2000, split at newline indices
+  % and send in consecutive chunks
+}
+\end{lstlisting}
+
+\section{Gemini Multimodal API Wrapper}
+The client wrapper (\texttt{lib/gemini-client.mjs}) implements retries and timeouts using `Promise.race` to handle transient network errors (HTTP 429, 503):
+\begin{lstlisting}[language=JavaScript, caption=Timeout and exponential backoff retry logic]
+export async function generateContentWithRetry(model, contents, timeoutMs = 30000, maxRetries = 3) {
+  let attempt = 0;
+  while (true) {
+    attempt++;
+    try {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Request timed out")), timeoutMs)
+      );
+      const requestPromise = model.generateContent(contents);
+      return await Promise.race([requestPromise, timeoutPromise]);
+    } catch (err) {
+      const isTransient = err.message.includes("503") || err.message.includes("429") || err.message.includes("timed out");
+      if (isTransient && attempt <= maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Fireflies.ai GraphQL Integration}
+To enable automated cloud-based meeting summaries, the codebase implements a specialized Fireflies.ai client (\texttt{lib/fireflies-client.mjs}) and associated agent routing logic (\texttt{agents/meetings-agent.mjs}).
+\begin{itemize}
+    \item \textbf{GraphQL Interface:} Fireflies exposes a GraphQL API at \texttt{https://api.fireflies.ai/graphql}. The client requests transcripts, summaries, organizer emails, duration, participant gists, and individual sentences containing timestamps:
+    \begin{lstlisting}[language=JavaScript]
+    const query = `
+      query Transcripts($limit: Int, $skip: Int) {
+        transcripts(limit: $limit, skip: $skip) {
+          id title date duration host_email participants
+          summary { action_items overview short_summary topics_discussed }
+        }
+      }`;
+    \end{lstlisting}
+    \item \textbf{Auto-Ingestion into GBrain:} When `ingestMeetings()` is executed, transcripts are converted to structured Markdown templates and stored in the vector database under slug \texttt{meeting-[id]}.
+    \item \textbf{Dynamic Failover Routing:} When a meeting summary query is processed by the Orchestrator, `getRecentMeetings()` checks for the presence of the `FIREFLIES_API_KEY`. If the key is not set or network failure occurs, the engine falls back to executing a keyword query `meeting summary participants` against local GBrain memory.
+\end{itemize}
+
+% ==========================================
+% CHAPTER 8: DEPLOYMENT & INFRASTRUCTURE
+% ==========================================
+\chapter{Deployment \& Infrastructure Configuration}
+\label{chap:deployment}
+
+\section{Local Setup \& WSL Environment Integration}
+Local deployment is configured on Windows using WSL (Windows Subsystem for Linux):
+\begin{itemize}
+    \item **Node.js Environment:** Runs on the Windows host, executing commands like \texttt{npm start} and handling integration clients.
+    \item **Database Process:** Runs inside WSL. The client accesses it by redirecting CLI calls through the WSL bash interpreter.
+\end{itemize}
+
+\section{Containerization using Docker}
+For cloud deployments (such as Railway or Hugging Face Spaces), the system uses a multi-stage Docker configuration:
+\begin{lstlisting}[language=bash, caption=Production Dockerfile highlights]
+FROM node:18-bullseye
+
+% Install PostgreSQL, Bun, and gbrain tools
+RUN apt-get update && apt-get install -y postgresql postgresql-contrib
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+RUN bun install -g gbrain-cli
+
+% Copy application files
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+% Run start script which manages local postgres and node instances
+CMD ["npm", "start"]
+\end{lstlisting}
+
+\section{Cloud Configuration and Orchestration Providers}
+The system includes configuration files for different deployment targets:
+\begin{itemize}
+    \item \textbf{\texttt{fly.toml}:} Configures memory limits, health checks, and port configurations for Fly.io.
+    \item \textbf{\texttt{docker-compose.yml}:} Configures multi-service local builds, mounting host directories for persistent database storage.
+    \item \textbf{Hugging Face Spaces / Railway:} Handled by configurations in \texttt{start.mjs} that auto-detect environment variables to write credentials and adjust port bindings dynamically.
+\end{itemize}
+
+% ==========================================
+% CHAPTER 9: DIAGNOSTICS & ROADMAP
+% ==========================================
+\chapter{Diagnostics, Limitations, and Future Roadmap}
+\label{chap:limitations}
+
+\section{System Diagnostics}
+Diagnostics are managed via automated test utilities:
+\begin{itemize}
+    \item \texttt{gbrain doctor}: Validates database connectivity, configuration schema validity, and access keys.
+    \item \texttt{scratch/list-models.mjs} and \texttt{scratch/test-all-models.mjs}: Confirms API permissions and model access.
+    \item Mock meeting injectors (\texttt{inject-meeting-review.mjs}): Populate mock meeting records into the database to verify the meeting preparation and query pipeline.
+\end{itemize}
+
+\section{Current Technical Limitations}
+\begin{enumerate}
+    \item \textbf{Vector Search Dependencies:} Some local environments lack compatible vector embedding libraries, causing GBrain to fall back to keyword-based full-text searches.
+    \item \textbf{Live Audio Ingestion:} Currently, meeting processing requires users to upload recorded audio files. Real-time screen or browser audio capture is not supported.
+    \item \textbf{Webhook Security Limits:} Meta webhooks require a secure public endpoint (HTTPS). Free developer options like ngrok use dynamic URLs that must be manually updated in the Meta Console on every server restart.
+    \item \textbf{System Resource Contention:} Running vector databases alongside local LLM runtimes (like Ollama) can cause significant CPU spikes in shared development environments.
+\end{enumerate}
+
+\section{Future Roadmap}
+The development plan includes:
+\begin{itemize}
+    \item \textbf{Phase 1: Real-time meeting capture:} Implement an agent that records system and microphone audio during active calls to automate meeting ingestion.
+    \item \textbf{Phase 2: Microsoft Teams Integration:} Add integration clients for the Microsoft 365 Graph API to support Outlook emails, Teams chats, and Outlook calendars.
+    \item \textbf{Phase 3: Automated Reply Drafting:} Add command intents that generate email drafts in Gmail based on context retrieved from the database.
+\end{itemize}
+
+% ==========================================
+% CHAPTER 10: CONCLUSION
+% ==========================================
+\chapter{Conclusion}
+The **Personal AI Assistant** provides a working prototype of a unified, intelligent workspace assistant. By integrating multi-agent routing (\textbf{GStack}), relational-vector memory (\textbf{GBrain}), and standard communication channels (Discord, WhatsApp), the system consolidates fragmented workspace information. The codebase demonstrates how modern LLMs can act as logical orchestrators for API clients and database systems, providing a solid foundation for further integrations.
+
+\newpage
+% ==========================================
+% REFERENCES
+% ==========================================
+\begin{thebibliography}{9}
+\bibitem{gemini}
+Google DeepMind, \emph{Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context}, Technical Report, 2024.
+\bibitem{pglite}
+Supabase, \emph{PGLite: PostgreSQL packaged as a WASM library for local execution}, Github Repository, 2024.
+\bibitem{openclaw}
+OpenClaw, \emph{Gateway Agent Runtime Service specifications}, Integration manual, 2025.
+\end{thebibliography}
+
+\end{document}

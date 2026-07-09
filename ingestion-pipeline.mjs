@@ -4,9 +4,10 @@ import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import { fetchEmails } from "./lib/gmail-client.mjs";
 import { storeEmail, storeCalendarEvent } from "./lib/gbrain-client.mjs";
-import { getTodaysEvents, getUpcomingEvents } from "./lib/calendar-client.mjs";
+import { getTodaysEvents, getUpcomingEvents, insertCalendarEvent } from "./lib/calendar-client.mjs";
 import { config } from "./config.mjs";
 import { hasAlertBeenSent, markAlertAsSent, setSessionState } from "./lib/session-state.mjs";
+import { generateResponse } from "./lib/gemini-client.mjs";
 
 
 
@@ -62,8 +63,15 @@ async function runIngestion() {
   for (const email of emails) {
     try {
       const wasStored = storeEmail(email);
-      if (wasStored) stored++;
-      else skipped++;
+      if (wasStored) {
+        stored++;
+        // Asynchronously analyze email to extract calendar events
+        autoScheduleCalendarEventFromEmail(email).catch((err) => {
+          console.error("Auto-scheduler error:", err.message);
+        });
+      } else {
+        skipped++;
+      }
     } catch (err) {
       console.error(`Failed to store email ${email.id}:`, err.message);
       failed++;
@@ -214,6 +222,81 @@ async function sendDiscordAlert(channelId, text) {
   if (!res.ok) {
     const errText = await res.text();
     throw new Error(`Discord API error (${res.status}): ${errText}`);
+  }
+}
+
+/**
+ * Automatically analyze an email using Gemini to see if it lists a calendar event.
+ * If yes, schedule it automatically in Google Calendar.
+ */
+async function autoScheduleCalendarEventFromEmail(email) {
+  console.log(`[Auto-Scheduler] Analyzing email for events: "${email.subject}"...`);
+  
+  const prompt = `You are a calendar assistant. Analyze the following email details to determine if it describes a specific meeting, event, call, appointment, or deadline that needs to be scheduled on a calendar.
+
+Current year: ${new Date().getFullYear()}
+Current date/time context: ${new Date().toLocaleString()}
+
+Email Details:
+From: ${email.from}
+Subject: ${email.subject}
+Date: ${email.date}
+Body:
+${email.body || email.snippet}
+
+Respond ONLY with a JSON object. Do not include markdown formatting, backticks, or fences.
+JSON Structure:
+{
+  "shouldSchedule": true/false,
+  "title": "Clear and concise event title",
+  "start": "ISO 8601 formatted start time (e.g. 2026-07-09T17:00:00+05:30) in the user's local timezone context",
+  "end": "ISO 8601 formatted end time (usually 30 minutes or 1 hour after start if unspecified)",
+  "description": "Short summary of the meeting context and sender details",
+  "location": "Google Meet link, physical address, or phone number if mentioned, else empty string"
+}
+
+If the email does not specify a clear date and time for the event, or if it is just a newsletter/notification with no meeting or task deadline, set "shouldSchedule" to false.`;
+
+  try {
+    const response = await generateResponse(prompt);
+    const cleaned = response.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+    const data = JSON.parse(cleaned);
+
+    if (data.shouldSchedule === true && data.start) {
+      console.log(`[Auto-Scheduler] Detected event: "${data.title}" starting at ${data.start}`);
+      
+      // Insert in Google Calendar
+      const newEvent = await insertCalendarEvent({
+        title: data.title,
+        start: data.start,
+        end: data.end || new Date(new Date(data.start).getTime() + 60 * 60 * 1000).toISOString(),
+        description: data.description,
+        location: data.location
+      });
+      
+      // Store in GBrain
+      storeCalendarEvent(newEvent);
+      
+      console.log(`[Auto-Scheduler] Event auto-scheduled successfully: ${newEvent.id}`);
+
+      // Send Discord notification
+      const alertMsg = `📅 **Auto-Scheduled Calendar Event:**\n` +
+        `• **Title:** ${newEvent.title}\n` +
+        `• **Time:** ${new Date(newEvent.start).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}\n` +
+        `• **Description:** ${newEvent.description || "None"}\n` +
+        `• **Location:** ${newEvent.location || "None"}\n` +
+        `*(Scheduled automatically from email: "${email.subject}")*`;
+        
+      if (config.discord.token) {
+        await sendDiscordAlert(config.discord.channelId, alertMsg).catch(err => {
+          console.error("Failed to send auto-schedule alert to Discord:", err.message);
+        });
+      }
+    } else {
+      console.log(`[Auto-Scheduler] No calendar events detected in: "${email.subject}"`);
+    }
+  } catch (err) {
+    console.error(`[Auto-Scheduler] Analysis failed for email "${email.subject}":`, err.message);
   }
 }
 

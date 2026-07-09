@@ -1,5 +1,5 @@
 import { parseIntent } from "../lib/gemini-client.mjs";
-import { searchEmails, summarizeTodaysEmails, getImportantEmails, extractActionItems } from "./email-agent.mjs";
+import { searchEmails, summarizeTodaysEmails, getImportantEmails, extractActionItems, replyToLastEmail } from "./email-agent.mjs";
 import { crossSourceSearch } from "./memory-agent.mjs";
 import { getDailyReport } from "./summary-agent.mjs";
 import { getTodaysMeetings, getUpcomingMeetings } from "./calendar-agent.mjs";
@@ -71,6 +71,9 @@ export async function processCommand(message) {
     switch (intent) {
       case "search_emails":
         return await searchEmails(query || message, sender);
+
+      case "reply_email":
+        return await replyToLastEmail(sender, query);
 
       case "summarize_emails":
         return await summarizeTodaysEmails();
